@@ -143,7 +143,7 @@ class MapCreator:
         # add all buildings
         self.all_buildings_fg = folium.FeatureGroup(name="All buildings")
         folium.GeoJson(self.all_buildings, style_function=self.mapStyler.style_buildings).add_to(self.all_buildings_fg)
-
+        self.all_buildings_fg.add_to(self.m)
         # endregion
 
         # endregion
