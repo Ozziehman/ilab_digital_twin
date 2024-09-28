@@ -1,0 +1,4 @@
+osmnx == 1.9.4
+geopandas == 0.14.4
+folium == 0.17.0
+srtm.py == 0.3.7
