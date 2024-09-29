@@ -78,7 +78,6 @@ class MapCreator:
         self.m = folium.Map(location=[self.latitude, self.longitude], zoom_start=12)
 
     def download_road_network_data(self):
-        # region (subregion) download road network and convert to geodataframe
         print("Downloading road network..")
         G = ox.graph_from_point(self.point, dist=self.load_dist, network_type='all')
 
@@ -101,6 +100,74 @@ class MapCreator:
         self.waterways = self.waterways[self.waterways.geometry.type == 'LineString']
         self.waterways.to_file(f'shpFiles/waterways_{self.name}.shp', driver='ESRI Shapefile')
         self.waterways.to_file(f'geoJsonFiles/waterways_{self.name}.geojson', driver='GeoJSON') 
+    
+    def add_buildings_tooltips(self, buildings, buildings_fg, styler):
+        for _, building in buildings.iterrows():
+            geometry = building.geometry 
+            properties = building.drop('geometry').to_dict() # gets properties
+
+            tooltip_content = "<br>".join([f"{key}: {value}" for key, value in properties.items() if value is not None]) #lists all data not None in popup/tooltip
+            tooltip = folium.Tooltip(tooltip_content)
+
+            folium.GeoJson(
+                geometry,
+                style_function=styler,
+                tooltip=tooltip
+            ).add_to(buildings_fg) # adds the tooltip to the GeoJson that is save under this
+        
+        return buildings_fg
+
+    def render_buffer_area_road(self):
+        self.projected_roads = self.roads.to_crs(epsg=self.epsg_code)
+        self.road_buffer = self.projected_roads.buffer(self.road_buffer_size)
+        self.road_buffer = self.road_buffer.to_crs(self.roads.crs)
+        self.road_buffer_union = self.road_buffer.unary_union
+
+        self.buffer_geojson_road = gpd.GeoSeries([self.road_buffer_union]).__geo_interface__
+
+        # create FeatureGroup for the buffer area road
+        self.buffer_area_road_fg = folium.FeatureGroup(name="Buffer area road")
+        folium.GeoJson(self.buffer_geojson_road, style_function=self.mapStyler.style_buffer_area_road).add_to(self.buffer_area_road_fg)
+        self.buffer_area_road_fg.add_to(self.m)
+
+        # buildings nearby roads
+        self.nearby_buildings_road = self.buildings[self.buildings.intersects(self.road_buffer_union)]
+
+        self.nearby_buildings_road_fg = folium.FeatureGroup(name="Buildings nearby roads")
+        folium.GeoJson(self.nearby_buildings_road, style_function=self.mapStyler.style_nearby_buildings_road).add_to(self.nearby_buildings_road_fg)
+        self.nearby_buildings_road_fg = self.add_buildings_tooltips(self.nearby_buildings_road, self.nearby_buildings_road_fg, styler=self.mapStyler.style_nearby_buildings_road)
+        self.nearby_buildings_road_fg.add_to(self.m)
+
+    def render_buffer_area_water(self):
+        self.projected_waterways = self.waterways.to_crs(epsg=self.epsg_code)
+        self.water_buffer = self.projected_waterways.buffer(self.water_buffer_size)
+        self.water_buffer = self.water_buffer.to_crs(self.waterways.crs)
+        self.water_buffer_union = self.water_buffer.unary_union
+
+        self.buffer_geojson_water = gpd.GeoSeries([self.water_buffer_union]).__geo_interface__
+
+        # create FeatureGroup for the buffer area water
+        self.buffer_area_water_fg = folium.FeatureGroup(name="Buffer area waterways")
+        folium.GeoJson(self.buffer_geojson_water, style_function=self.mapStyler.style_buffer_area_water).add_to(self.buffer_area_water_fg)
+        self.buffer_area_water_fg.add_to(self.m)
+
+        # buildings nearby water
+        self.nearby_buildings_water = self.buildings[self.buildings.intersects(self.water_buffer_union)]
+
+        self.nearby_buildings_water_fg = folium.FeatureGroup(name="Buildings nearby waterways")
+        folium.GeoJson(self.nearby_buildings_water, style_function=self.mapStyler.style_nearby_buildings_water).add_to(self.nearby_buildings_water_fg)
+        self.nearby_buildings_water_fg = self.add_buildings_tooltips(self.nearby_buildings_water, self.nearby_buildings_water_fg, styler=self.mapStyler.style_nearby_buildings_water)
+        self.nearby_buildings_water_fg.add_to(self.m)
+
+    def render_buffer_areas(self, water_buffer=True, road_buffer=True):
+        self.utm_zone = int((self.longitude + 180) // 6) + 1
+        self.is_northern_hemisphere = self.latitude >= 0
+        self.epsg_code = 32600 + self.utm_zone if self.is_northern_hemisphere else 32700 + self.utm_zone
+
+        if water_buffer==True:
+            self.render_buffer_area_water()
+        if road_buffer==True:
+            self.render_buffer_area_road()
 
     def save_map(self):
         """Saves barebones map with static info"""
@@ -121,91 +188,26 @@ class MapCreator:
         
         self.waterways = gpd.read_file(f'shpFiles/waterways_{self.name}.shp')
         
-        #_______________________________________________
-        # region ADD ALL SEPERATE ELEMENTS TO FOLIUM MAP
-
-        # region (subregion) add roads folium map
         # add roads
         self.roads_fg = folium.FeatureGroup(name='Roads')
         folium.GeoJson(self.roads,style_function=self.mapStyler.style_roads).add_to(self.roads_fg)
         self.roads_fg.add_to(self.m)
-        # endregion
 
-        # region (subregion) add waterways to map
         # add water bodies
         self.waterways_fg = folium.FeatureGroup(name='Waterways')
         folium.GeoJson(self.waterways,style_function=self.mapStyler.style_waterways).add_to(self.waterways_fg)
         self.waterways_fg.add_to(self.m)
-        # endregion    
+  
 
-        # region (subregion) add all buildings to folium map
         self.all_buildings = self.buildings
+
         # add all buildings
         self.all_buildings_fg = folium.FeatureGroup(name="All buildings")
         folium.GeoJson(self.all_buildings, style_function=self.mapStyler.style_buildings).add_to(self.all_buildings_fg)
+        self.all_buildings_fg = self.add_buildings_tooltips(self.all_buildings, self.all_buildings_fg, styler=self.mapStyler.style_buildings)
         self.all_buildings_fg.add_to(self.m)
-        # endregion
-
-        # endregion
-        #_______________________________________________
-
-        #_______________________________________________
-        # region ADD FULL AREA COVERAGES TO FOLIUM MAP
-
-        # region (subregion) getting CRS to map areas to
-        # get CRS for projected area, this is used for projecting the buffer area
-        self.utm_zone = int((self.longitude + 180) // 6) + 1
-        self.is_northern_hemisphere = self.latitude >= 0
-        self.epsg_code = 32600 + self.utm_zone if self.is_northern_hemisphere else 32700 + self.utm_zone
-        # endregion
         
-        # region (subregion) water buffer area, display buildings within the water bufer
-        # BUILDINGS WITHIN WATER BUFFER
-        # re-project water bodies to the projected CRS
-        self.projected_waterways = self.waterways.to_crs(epsg=self.epsg_code)
-        self.water_buffer = self.projected_waterways.buffer(self.water_buffer_size)
-        self.water_buffer = self.water_buffer.to_crs(self.waterways.crs)
-        self.water_buffer_union = self.water_buffer.unary_union
-
-        self.buffer_geojson_water = gpd.GeoSeries([self.water_buffer_union]).__geo_interface__
-
-        # create FeatureGroup for the buffer area water
-        self.buffer_area_water_fg = folium.FeatureGroup(name="Buffer area waterways")
-        folium.GeoJson(self.buffer_geojson_water, style_function=self.mapStyler.style_buffer_area_water).add_to(self.buffer_area_water_fg)
-        self.buffer_area_water_fg.add_to(self.m)
-
-        # buildings nearby water
-        self.nearby_buildings_water = self.buildings[self.buildings.intersects(self.water_buffer_union)]
-
-        self.nearby_buildings_water_fg = folium.FeatureGroup(name="Buildings nearby waterways")
-        folium.GeoJson(self.nearby_buildings_water, style_function=self.mapStyler.style_nearby_buildings_water).add_to(self.nearby_buildings_water_fg)
-        self.nearby_buildings_water_fg.add_to(self.m)
-        #endregion
-
-        # region (subregion) water buffer area, display buildings within the water bufer
-        # BUILDINGS WITHIN ROAD BUFFER
-        # re-project raods to the projected CRS
-        self.projected_roads = self.roads.to_crs(epsg=self.epsg_code)
-        self.road_buffer = self.projected_roads.buffer(self.road_buffer_size)
-        self.road_buffer = self.road_buffer.to_crs(self.roads.crs)
-        self.road_buffer_union = self.road_buffer.unary_union
-
-        self.buffer_geojson_road = gpd.GeoSeries([self.road_buffer_union]).__geo_interface__
-
-        # create FeatureGroup for the buffer area road
-        self.buffer_area_road_fg = folium.FeatureGroup(name="Buffer area road")
-        folium.GeoJson(self.buffer_geojson_road, style_function=self.mapStyler.style_buffer_area_road).add_to(self.buffer_area_road_fg)
-        self.buffer_area_road_fg.add_to(self.m)
-
-        # buildings nearby roads
-        self.nearby_buildings_road = self.buildings[self.buildings.intersects(self.road_buffer_union)]
-
-        self.nearby_buildings_road_fg = folium.FeatureGroup(name="Buildings nearby roads")
-        folium.GeoJson(self.nearby_buildings_road, style_function=self.mapStyler.style_nearby_buildings_road).add_to(self.nearby_buildings_road_fg)
-        self.nearby_buildings_road_fg.add_to(self.m)
-        # endregion
-        # endregion
-        #_______________________________________________
+        self.render_buffer_areas(water_buffer=True, road_buffer=True)
 
         # add layer control
         folium.LayerControl(collapsed=False, draggable=True).add_to(self.m)
