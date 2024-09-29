@@ -2,7 +2,11 @@ import osmnx as ox
 import geopandas as gpd
 import folium
 import time
+import srtm
+from folium.plugins import HeatMap
 import os 
+import numpy as np
+from shapely.geometry import Point
 
 
 if not os.path.exists('shpFiles'):
@@ -116,6 +120,37 @@ class MapCreator:
             ).add_to(buildings_fg) # adds the tooltip to the GeoJson that is save under this
         
         return buildings_fg
+    
+    def render_altitude_heatmap(self):
+        #TODO: make the heatmap height and width change to the infrastructural data loaded to save space
+        """Renders altitude heatmap of the area"""
+        self.elevation_data = srtm.get_data()
+        # set bound to the outer part of the loaded infrastructure
+        self.lat_min = min(self.buildings.geometry.bounds.miny.min(), self.roads.geometry.bounds.miny.min(), self.waterways.geometry.bounds.miny.min())
+        self.lat_max = max(self.buildings.geometry.bounds.maxy.max(), self.roads.geometry.bounds.maxy.max(), self.waterways.geometry.bounds.maxy.max())
+        self.lon_min = min(self.buildings.geometry.bounds.minx.min(), self.roads.geometry.bounds.minx.min(), self.waterways.geometry.bounds.minx.min())
+        self.lon_max = max(self.buildings.geometry.bounds.maxx.max(), self.roads.geometry.bounds.maxx.max(), self.waterways.geometry.bounds.maxx.max())
+
+        self.heatmap_data = []
+        for lat in np.arange(self.lat_min, self.lat_max, 0.00005):
+            for lon in np.arange(self.lon_min, self.lon_max, 0.00005):
+                altitude = self.elevation_data.get_elevation(lat, lon)
+                if altitude is not None:
+                    self.heatmap_data.append([lat, lon, altitude])
+
+        gradient = {0.2: 'blue', 0.4: 'lime', 0.6: 'yellow', 0.8: 'orange', 1.0: 'red'}
+        self.heatmap = HeatMap(self.heatmap_data, min_opacity=0.05, radius=15, blur=10, max_zoom=1, gradient=gradient)
+        
+        self.elevation_heatmap = folium.FeatureGroup(name="Elevation heatmap")
+        self.heatmap.add_to(self.elevation_heatmap)
+        self.elevation_heatmap.add_to(self.m)
+
+        #convert heatmap to geodataframe to save as geojson
+        print("Creating heatmap gdf")
+        self.elevation_heatmap_geometry = [Point(lon, lat) for lat, lon, intensity in self.heatmap_data]
+        self.gdf_elevation_heatmap = gpd.GeoDataFrame(self.heatmap_data, geometry=self.elevation_heatmap_geometry, columns=['Latitude', 'Longitude', 'Intensity'])
+        self.gdf_elevation_heatmap.to_file(f'geoJsonFiles/elevation_heatmap_{self.name}.geojson', driver='GeoJSON')
+        print(f"Heatmap creaated and also saved as GeoJSON as geoJsonFiles/elevation_heatmap_{self.name}.geojson ")
 
     def render_buffer_area_road(self):
         self.projected_roads = self.roads.to_crs(epsg=self.epsg_code)
@@ -208,6 +243,7 @@ class MapCreator:
         self.all_buildings_fg.add_to(self.m)
         
         self.render_buffer_areas(water_buffer=True, road_buffer=True)
+        self.render_altitude_heatmap()
 
         # add layer control
         folium.LayerControl(collapsed=False, draggable=True).add_to(self.m)
