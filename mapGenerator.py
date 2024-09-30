@@ -8,7 +8,6 @@ import os
 import numpy as np
 from shapely.geometry import Point
 
-
 if not os.path.exists('shpFiles'):
     os.makedirs('shpFiles')
 
@@ -110,7 +109,7 @@ class MapCreator:
             geometry = building.geometry 
             properties = building.drop('geometry').to_dict() # gets properties
 
-            tooltip_content = "<br>".join([f"{key}: {value}" for key, value in properties.items() if value is not None]) #lists all data not None in popup/tooltip
+            tooltip_content = "<br>".join([f"{key}: {value}" for key, value in properties.items() if value is not None and value is not np.nan]) #lists all data not None in popup/tooltip
             tooltip = folium.Tooltip(tooltip_content)
 
             folium.GeoJson(
@@ -204,12 +203,54 @@ class MapCreator:
         if road_buffer==True:
             self.render_buffer_area_road()
 
-    def save_map(self):
+    def save_map(self, interactive_marker=True):
         """Saves barebones map with static info"""
         self.map_name = f'static/maps/map_{self.name}.html'
         self.m.save(self.map_name)
 
+        if interactive_marker == True:
+            self.inject_interactive_marker(self.map_name)
+
         return self.map_name
+    
+    def inject_interactive_marker(self, map_file):
+        """Injects live update js into the html"""
+        with open(map_file, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+
+        self.interactive_marker = """
+<script>
+    console.log("js injected");
+    var mapDiv = document.querySelector('.folium-map');
+    var mapDivId = mapDiv.id;
+    var mapObject = window[mapDivId];
+    
+    mapObject.on('click', function(e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+        var marker = L.marker([lat, lng]).addTo(mapObject);
+        marker.bindPopup("Lat: " + lat.toFixed(6) + ", Lon: " + lng.toFixed(6)).openPopup();
+    });
+
+    //live update test
+    //function updateMarker() {
+    //    var lat = {{ latitude }} + (Math.random() - 0.5) * 0.001;
+    //    var lng = {{ longitude }} + (Math.random() - 0.5) * 0.001;
+    //    marker.setLatLng([lat, lng]);
+    //}
+
+    //setInterval(updateMarker, 1000);
+</script>
+        """
+        # inject marker js into correct spot
+        self.interactive_marker = self.interactive_marker.replace("{{ latitude }}", str(self.latitude)).replace("{{ longitude }}", str(self.longitude)) #replace string values with python vars
+        modified_html = html_content.replace("</html>", self.interactive_marker + "\n</html>") #modify the html by 
+
+        # save modified html back
+        with open(map_file, 'w') as f:
+            f.write(modified_html)
+        
+        print(f"interactive marker js injected and map saved back as {map_file}")
 
     def create_detailed_map(self):
         #download data with downloader
@@ -217,32 +258,30 @@ class MapCreator:
         self.download_road_network_data()
         self.download_waterway_data()
         
+        #read saved files
         self.roads = gpd.read_file(f'shpFiles/roads_{self.name}.shp')
-        
-        self.buildings = gpd.read_file(f'shpFiles/buildings_{self.name}.shp')
-        
+        self.all_buildings = gpd.read_file(f'shpFiles/buildings_{self.name}.shp')
         self.waterways = gpd.read_file(f'shpFiles/waterways_{self.name}.shp')
         
-        # add roads
+        # add roads to a featuregroup
         self.roads_fg = folium.FeatureGroup(name='Roads')
         folium.GeoJson(self.roads,style_function=self.mapStyler.style_roads).add_to(self.roads_fg)
         self.roads_fg.add_to(self.m)
 
-        # add water bodies
+        # add waterways to a featuregroup
         self.waterways_fg = folium.FeatureGroup(name='Waterways')
         folium.GeoJson(self.waterways,style_function=self.mapStyler.style_waterways).add_to(self.waterways_fg)
         self.waterways_fg.add_to(self.m)
-  
 
-        self.all_buildings = self.buildings
-
-        # add all buildings
+        # add all buildings to featuregroup
         self.all_buildings_fg = folium.FeatureGroup(name="All buildings")
         folium.GeoJson(self.all_buildings, style_function=self.mapStyler.style_buildings).add_to(self.all_buildings_fg)
         self.all_buildings_fg = self.add_buildings_tooltips(self.all_buildings, self.all_buildings_fg, styler=self.mapStyler.style_buildings)
         self.all_buildings_fg.add_to(self.m)
         
+        #render buffer areas, change the variables to include or not
         self.render_buffer_areas(water_buffer=True, road_buffer=True)
+        #render altitude heatmap, BE CAUTIOUS, at large area options this will use a LOT of storage
         self.render_altitude_heatmap()
 
         # add layer control
@@ -256,8 +295,6 @@ class MapCreator:
 
         return saved_map_name
     
-    
-
 # callng the stuff
 map_creator_1 = MapCreator(51.1797305,5.8812762,"Boschmolenplas", 500, 150, 20)
 map_creator_1.create_detailed_map()
