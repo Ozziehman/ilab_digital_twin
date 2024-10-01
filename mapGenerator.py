@@ -67,6 +67,153 @@ class DataDownloader:
                 time.sleep(self.sleep_time)  # retry after a while again
         raise Exception("Failed to download")
     
+class JavaScriptInjector:
+    def inject_interactive_marker(self, map_file):
+        """Injects live update js into the html"""
+        with open(map_file, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+
+        self.interactive_marker = """
+<script>
+    var mapDiv = document.querySelector('.folium-map');
+    var mapDivId = mapDiv.id;
+    var mapObject = window[mapDivId];
+    
+    mapObject.on('click', function(e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+        var marker = L.marker([lat, lng]).addTo(mapObject);
+        marker.bindPopup("Lat: " + lat.toFixed(6) + ", Lon: " + lng.toFixed(6)).openPopup();
+
+        // Listen for the popupclose event to remove the marker
+        marker.on('popupclose', function() {
+            mapObject.removeLayer(marker);
+        });
+    });
+</script>
+        """
+        # inject marker js into correct spot
+        self.modified_html_interactive_marker = html_content.replace("</html>", self.interactive_marker + "\n</html>") #modify the html by 
+
+        # save modified html back
+        with open(map_file, 'w') as f:
+            f.write(self.modified_html_interactive_marker)
+        
+        print(f"interactive marker js injected and map saved back as {map_file}")
+
+    def inject_camera_simulation_script(self, map_file, camera_latitude, camera_longitude, direction, width, reach, camera_name, video_source, cone_outline_color = 'red', cone_fill_color = 'orange', camera_outline_color = 'blue', camera_fill_color = 'lightblue'):
+        """Inject script to show camera 'simulation', IF pointing upwards angle1 would be the left bound and angle2 the right side"""
+        
+        with open(map_file, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        # replace spaces with underscores in camera name
+        camera_name = camera_name.replace(' ', '_')
+
+        self.camera_simulation_script = """
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.EasyButton/2.4.0/easy-button.min.js"></script>
+<script>
+    var mapDiv = document.querySelector('.folium-map');
+    var mapDivId = mapDiv.id;
+    var mapObject = window[mapDivId];
+    var circle_radius = 5;
+    var guide_circle_radius = {{ reach }};
+    var lat = {{ latitude }};
+    var lon = {{ longitude }};
+
+    // small circle at camrea location
+    var circle_{{ camera_name }} = L.circle([lat, lon], {
+        color: '{{ camera_outline_color }}',
+        fillColor: '{{ camera_fill_color }}',
+        fillOpacity: 0.5,
+        radius: circle_radius // meters radius
+    }).addTo(mapObject);
+
+    // outer angles absed on direction and width
+    var direction = {{ direction }}; // degrees
+    var width = {{ width }}; // degrees
+    var angle1 = direction - width / 2;
+    var angle2 = direction + width / 2;
+
+    // get points for cone shape
+    var latlongpairs = [[lat, lon]];
+    var numPoints = 100; // Number of points to create the arc
+    var latFactor = guide_circle_radius / 111320; // convert meters to degrees latitude
+    var lonFactor = guide_circle_radius / (111320 * Math.cos(lat * Math.PI / 180)); // convert meters to degrees longitude, needs to be corrected
+    for (var i = 0; i <= numPoints; i++) {
+        var angle = angle1 + (i * (angle2 - angle1) / numPoints);
+        latlongpairs.push([
+            lat + latFactor * Math.cos(angle * Math.PI / 180),
+            lon + lonFactor * Math.sin(angle * Math.PI / 180)
+        ]);
+    }
+    latlongpairs.push([lat, lon]); // Close the polygon
+
+    // make cone shape
+    var cone_{{ camera_name }} = L.polygon(latlongpairs, {
+        color: '{{ cone_outline_color }}',
+        fillColor: '{{ cone_fill_color }}',
+        fillOpacity: 0.5
+    }).addTo(mapObject);
+
+    // bind popup with video
+    cone_{{ camera_name }}.bindPopup('<iframe width="288" height="163" src="{{ video_source }}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>');
+
+    var popup_active_{{ camera_name }} = false
+    // show popup on clicky
+    cone_{{ camera_name }}.on('mouseup', function (e) {{
+        if (popup_active_{{ camera_name }} == false){this.openPopup();}
+    }});
+    cone_{{ camera_name }}.on('mouseup', function (e) {{
+        if (popup_active_{{ camera_name }} == true){this.closePopup();}
+    }});
+
+    var cameraLayer_{{ camera_name }} = [circle_{{ camera_name }}, cone_{{ camera_name }}];
+    var cameraButton_{{ camera_name }} = L.easyButton({
+        states: [{
+            stateName: 'show-camera',
+            icon: 'fa-video-camera',
+            title: 'Show camera: {{ camera_name }}',
+            onClick: function(btn, map) {
+                cameraLayer_{{ camera_name }}.forEach(function(layer) {
+                    map.removeLayer(layer);
+                });
+                btn.state('hide-camera');
+            }
+        }, {
+            stateName: 'hide-camera',
+            icon: 'fa-eye-slash',
+            title: 'Hide camera: {{ camera_name }}',
+            onClick: function(btn, map) {
+                cameraLayer_{{ camera_name }}.forEach(function(layer) {
+                    map.addLayer(layer);
+                });
+                btn.state('show-camera');
+            }
+        }]
+    }).addTo(mapObject);
+</script>
+    """
+
+        self.camera_simulation_script = self.camera_simulation_script.replace("{{ latitude }}", str(camera_latitude))
+        self.camera_simulation_script = self.camera_simulation_script.replace("{{ longitude }}", str(camera_longitude))
+        self.camera_simulation_script = self.camera_simulation_script.replace("{{ direction }}", str(direction))
+        self.camera_simulation_script = self.camera_simulation_script.replace("{{ width }}", str(width))
+        self.camera_simulation_script = self.camera_simulation_script.replace("{{ reach }}", str(reach))
+        self.camera_simulation_script = self.camera_simulation_script.replace("{{ camera_outline_color }}", str(camera_outline_color))
+        self.camera_simulation_script = self.camera_simulation_script.replace("{{ camera_fill_color }}", str(camera_fill_color))
+        self.camera_simulation_script = self.camera_simulation_script.replace("{{ cone_outline_color }}", str(cone_outline_color))
+        self.camera_simulation_script = self.camera_simulation_script.replace("{{ cone_fill_color }}", str(cone_fill_color))
+        self.camera_simulation_script = self.camera_simulation_script.replace("{{ camera_name }}", str(camera_name))
+        self.camera_simulation_script = self.camera_simulation_script.replace("{{ video_source }}", str(video_source))
+        self.modified_html_camera = html_content.replace("</html>", self.camera_simulation_script + "\n</html>")
+
+        # save modified html back
+        with open(map_file, 'w') as f:
+            f.write(self.modified_html_camera)
+
+        print(f"camrea simulation ({camera_name}) injected and map saved back as {map_file}\nwith paramaters:\nlat: {camera_latitude} \nlon: {camera_longitude} \ndirection: {direction} \nwidth: {width} \nreach: {reach} meters")
+        
+    
 class MapCreator:
     def __init__(self, latitude, longitude, name, load_dist=2000, water_buffer_size = 150, road_buffer_size=20):
         self.latitude = latitude
@@ -79,6 +226,8 @@ class MapCreator:
         self.dataDownloader = DataDownloader(self.latitude, self.longitude, dist=self.load_dist)
         self.mapStyler = MapStyler()
         self.m = folium.Map(location=[self.latitude, self.longitude], zoom_start=12)
+        self.javaScriptInjector = JavaScriptInjector()
+        self.map_name = f'static/maps/map_{self.name}.html'
 
     def download_road_network_data(self):
         print("Downloading road network..")
@@ -104,12 +253,14 @@ class MapCreator:
         self.waterways.to_file(f'shpFiles/waterways_{self.name}.shp', driver='ESRI Shapefile')
         self.waterways.to_file(f'geoJsonFiles/waterways_{self.name}.geojson', driver='GeoJSON') 
     
-    def add_buildings_tooltips(self, buildings, buildings_fg, styler):
+    def add_buildings_tooltips(self, buildings, buildings_fg, styler, extra_data=None):
         for _, building in buildings.iterrows():
             geometry = building.geometry 
             properties = building.drop('geometry').to_dict() # gets properties
 
             tooltip_content = "<br>".join([f"{key}: {value}" for key, value in properties.items() if value is not None and value is not np.nan]) #lists all data not None in popup/tooltip
+            if extra_data is not None:
+                tooltip_content += "<br>" + "<br>".join([f"{key}: {value}" for key, value in extra_data.items() if value is not None and value is not np.nan])
             tooltip = folium.Tooltip(tooltip_content)
 
             folium.GeoJson(
@@ -144,12 +295,13 @@ class MapCreator:
         self.heatmap.add_to(self.elevation_heatmap)
         self.elevation_heatmap.add_to(self.m)
 
+        # TODO: find more efficient way to do this
         #convert heatmap to geodataframe to save as geojson
-        print("Creating heatmap gdf")
-        self.elevation_heatmap_geometry = [Point(lon, lat) for lat, lon, intensity in self.heatmap_data]
-        self.gdf_elevation_heatmap = gpd.GeoDataFrame(self.heatmap_data, geometry=self.elevation_heatmap_geometry, columns=['Latitude', 'Longitude', 'Intensity'])
-        self.gdf_elevation_heatmap.to_file(f'geoJsonFiles/elevation_heatmap_{self.name}.geojson', driver='GeoJSON')
-        print(f"Heatmap creaated and also saved as GeoJSON as geoJsonFiles/elevation_heatmap_{self.name}.geojson ")
+        # print("Creating heatmap gdf")
+        # self.elevation_heatmap_geometry = [Point(lon, lat) for lat, lon, intensity in self.heatmap_data]
+        # self.gdf_elevation_heatmap = gpd.GeoDataFrame(self.heatmap_data, geometry=self.elevation_heatmap_geometry, columns=['Latitude', 'Longitude', 'Intensity'])
+        # self.gdf_elevation_heatmap.to_file(f'geoJsonFiles/elevation_heatmap_{self.name}.geojson', driver='GeoJSON')
+        # print(f"Heatmap creaated and also saved as GeoJSON as geoJsonFiles/elevation_heatmap_{self.name}.geojson ")
 
     def render_buffer_area_road(self):
         self.projected_roads = self.roads.to_crs(epsg=self.epsg_code)
@@ -169,7 +321,7 @@ class MapCreator:
 
         self.nearby_buildings_road_fg = folium.FeatureGroup(name="Buildings nearby roads")
         folium.GeoJson(self.nearby_buildings_road, style_function=self.mapStyler.style_nearby_buildings_road).add_to(self.nearby_buildings_road_fg)
-        self.nearby_buildings_road_fg = self.add_buildings_tooltips(self.nearby_buildings_road, self.nearby_buildings_road_fg, styler=self.mapStyler.style_nearby_buildings_road)
+        self.nearby_buildings_road_fg = self.add_buildings_tooltips(self.nearby_buildings_road, self.nearby_buildings_road_fg, styler=self.mapStyler.style_nearby_buildings_road, extra_data = {'Digital Twin Name': self.name, 'Building Type': 'within road buffer'})
         self.nearby_buildings_road_fg.add_to(self.m)
 
     def render_buffer_area_water(self):
@@ -190,7 +342,7 @@ class MapCreator:
 
         self.nearby_buildings_water_fg = folium.FeatureGroup(name="Buildings nearby waterways")
         folium.GeoJson(self.nearby_buildings_water, style_function=self.mapStyler.style_nearby_buildings_water).add_to(self.nearby_buildings_water_fg)
-        self.nearby_buildings_water_fg = self.add_buildings_tooltips(self.nearby_buildings_water, self.nearby_buildings_water_fg, styler=self.mapStyler.style_nearby_buildings_water)
+        self.nearby_buildings_water_fg = self.add_buildings_tooltips(self.nearby_buildings_water, self.nearby_buildings_water_fg, styler=self.mapStyler.style_nearby_buildings_water, extra_data = {'Digital Twin Name': self.name, 'Building Type': 'within water buffer'})
         self.nearby_buildings_water_fg.add_to(self.m)
 
     def render_buffer_areas(self, water_buffer=True, road_buffer=True):
@@ -203,54 +355,19 @@ class MapCreator:
         if road_buffer==True:
             self.render_buffer_area_road()
 
-    def save_map(self, interactive_marker=True):
+    def save_map(self, interactive_marker=True, camera_simulation=True):
         """Saves barebones map with static info"""
-        self.map_name = f'static/maps/map_{self.name}.html'
         self.m.save(self.map_name)
 
+        # these NEED to take place AFTER saving the base html with static info
         if interactive_marker == True:
-            self.inject_interactive_marker(self.map_name)
-
+            self.javaScriptInjector.inject_interactive_marker(self.map_name)
+        if camera_simulation == True:
+            # TODO: get this from test to definitive:
+            self.javaScriptInjector.inject_camera_simulation_script(self.map_name, camera_latitude=51.176858, camera_longitude=5.882079, direction=-60, width=94, reach=200, camera_name='camera 1 red', video_source='https://www.youtube.com/embed/4qOxFyZLcl0?si=VO9YbHXW7mDSENHO', cone_outline_color='red', cone_fill_color='lightred', camera_outline_color='blue', camera_fill_color='lightblue')
+            self.javaScriptInjector.inject_camera_simulation_script(self.map_name, camera_latitude=51.179512, camera_longitude=5.878201, direction=180, width=94, reach=200, camera_name='camera 2 blue', video_source='https://www.youtube.com/embed/4qOxFyZLcl0?si=VO9YbHXW7mDSENHO', cone_outline_color='blue', cone_fill_color='lightblue', camera_outline_color='red', camera_fill_color='lightred')
+            self.javaScriptInjector.inject_camera_simulation_script(self.map_name, camera_latitude=51.184346, camera_longitude=5.876827, direction=278, width=137, reach=800, camera_name='camera 3 green', video_source='https://www.youtube.com/embed/lffpBLDQqqc?si=H6um6OemAf8UQc56', cone_outline_color='green', cone_fill_color='lightgreen', camera_outline_color='purple', camera_fill_color='lightpurple')
         return self.map_name
-    
-    def inject_interactive_marker(self, map_file):
-        """Injects live update js into the html"""
-        with open(map_file, 'r', encoding='utf-8') as f:
-            html_content = f.read()
-
-        self.interactive_marker = """
-<script>
-    console.log("js injected");
-    var mapDiv = document.querySelector('.folium-map');
-    var mapDivId = mapDiv.id;
-    var mapObject = window[mapDivId];
-    
-    mapObject.on('click', function(e) {
-        var lat = e.latlng.lat;
-        var lng = e.latlng.lng;
-        var marker = L.marker([lat, lng]).addTo(mapObject);
-        marker.bindPopup("Lat: " + lat.toFixed(6) + ", Lon: " + lng.toFixed(6)).openPopup();
-    });
-
-    //live update test
-    //function updateMarker() {
-    //    var lat = {{ latitude }} + (Math.random() - 0.5) * 0.001;
-    //    var lng = {{ longitude }} + (Math.random() - 0.5) * 0.001;
-    //    marker.setLatLng([lat, lng]);
-    //}
-
-    //setInterval(updateMarker, 1000);
-</script>
-        """
-        # inject marker js into correct spot
-        self.interactive_marker = self.interactive_marker.replace("{{ latitude }}", str(self.latitude)).replace("{{ longitude }}", str(self.longitude)) #replace string values with python vars
-        modified_html = html_content.replace("</html>", self.interactive_marker + "\n</html>") #modify the html by 
-
-        # save modified html back
-        with open(map_file, 'w') as f:
-            f.write(modified_html)
-        
-        print(f"interactive marker js injected and map saved back as {map_file}")
 
     def create_detailed_map(self):
         #download data with downloader
@@ -276,7 +393,7 @@ class MapCreator:
         # add all buildings to featuregroup
         self.all_buildings_fg = folium.FeatureGroup(name="All buildings")
         folium.GeoJson(self.all_buildings, style_function=self.mapStyler.style_buildings).add_to(self.all_buildings_fg)
-        self.all_buildings_fg = self.add_buildings_tooltips(self.all_buildings, self.all_buildings_fg, styler=self.mapStyler.style_buildings)
+        self.all_buildings_fg = self.add_buildings_tooltips(self.all_buildings, self.all_buildings_fg, styler=self.mapStyler.style_buildings, extra_data = {'Digital Twin Name': self.name, 'Building Type': 'general'})
         self.all_buildings_fg.add_to(self.m)
         
         #render buffer areas, change the variables to include or not
@@ -290,11 +407,12 @@ class MapCreator:
         # save map, its converted to a static html
         
         self.save_map()
+        
         saved_map_name = f'maps/map_{self.name}.html'
         print(f"Map saved under {saved_map_name} in the static folder.")
 
         return saved_map_name
     
 # callng the stuff
-map_creator_1 = MapCreator(51.1797305,5.8812762,"Boschmolenplas", 500, 150, 20)
+map_creator_1 = MapCreator(51.1797305,5.8812762,"Boschmolenplas", 2000, 150, 20)
 map_creator_1.create_detailed_map()
