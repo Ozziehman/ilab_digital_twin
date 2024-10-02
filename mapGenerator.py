@@ -276,10 +276,10 @@ class MapCreator:
         """Renders altitude heatmap of the area"""
         self.elevation_data = srtm.get_data()
         # set bound to the outer part of the loaded infrastructure
-        self.lat_min = min(self.buildings.geometry.bounds.miny.min(), self.roads.geometry.bounds.miny.min(), self.waterways.geometry.bounds.miny.min())
-        self.lat_max = max(self.buildings.geometry.bounds.maxy.max(), self.roads.geometry.bounds.maxy.max(), self.waterways.geometry.bounds.maxy.max())
-        self.lon_min = min(self.buildings.geometry.bounds.minx.min(), self.roads.geometry.bounds.minx.min(), self.waterways.geometry.bounds.minx.min())
-        self.lon_max = max(self.buildings.geometry.bounds.maxx.max(), self.roads.geometry.bounds.maxx.max(), self.waterways.geometry.bounds.maxx.max())
+        self.lat_min = min(self.buildings.geometry.bounds.miny.min(), self.roads.geometry.bounds.miny.min())
+        self.lat_max = max(self.buildings.geometry.bounds.maxy.max(), self.roads.geometry.bounds.maxy.max())
+        self.lon_min = min(self.buildings.geometry.bounds.minx.min(), self.roads.geometry.bounds.minx.min())
+        self.lon_max = max(self.buildings.geometry.bounds.maxx.max(), self.roads.geometry.bounds.maxx.max())
 
         self.heatmap_data = []
         for lat in np.arange(self.lat_min, self.lat_max, 0.00005):
@@ -289,7 +289,7 @@ class MapCreator:
                     self.heatmap_data.append([lat, lon, altitude])
 
         gradient = {0.2: 'blue', 0.4: 'lime', 0.6: 'yellow', 0.8: 'orange', 1.0: 'red'}
-        self.heatmap = HeatMap(self.heatmap_data, min_opacity=0.05, radius=15, blur=10, max_zoom=1, gradient=gradient)
+        self.heatmap = HeatMap(self.heatmap_data, min_opacity=0.05, radius=15, blur=20, max_zoom=1, gradient=gradient)
         
         self.elevation_heatmap = folium.FeatureGroup(name="Elevation heatmap")
         self.heatmap.add_to(self.elevation_heatmap)
