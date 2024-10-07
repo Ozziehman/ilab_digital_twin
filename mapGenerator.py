@@ -96,7 +96,7 @@ class JavaScriptInjector:
         self.modified_html_interactive_marker = html_content.replace("</html>", self.interactive_marker + "\n</html>") #modify the html by 
 
         # save modified html back
-        with open(map_file, 'w') as f:
+        with open(map_file, 'w', encoding='utf-8') as f:
             f.write(self.modified_html_interactive_marker)
         
         print(f"interactive marker js injected and map saved back as {map_file}")
@@ -208,7 +208,7 @@ class JavaScriptInjector:
         self.modified_html_camera = html_content.replace("</html>", self.camera_simulation_script + "\n</html>")
 
         # save modified html back
-        with open(map_file, 'w') as f:
+        with open(map_file, 'w', encoding='utf-8') as f:
             f.write(self.modified_html_camera)
 
         print(f"camrea simulation ({camera_name}) injected and map saved back as {map_file}\nwith paramaters:\nlat: {camera_latitude} \nlon: {camera_longitude} \ndirection: {direction} \nwidth: {width} \nreach: {reach} meters")
@@ -417,6 +417,8 @@ class MapCreator:
 
         print("Converting road network to GeoDataFrame, getting the roads all prepared")
         self.gdf_roads = ox.graph_to_gdfs(G, nodes=False)
+        if 'nodes' in self.gdf_roads.columns:
+            self.gdf_roads = self.gdf_roads.drop(columns=['nodes'])
         print("Saving shapefiles...")
         self.gdf_roads.to_file(f'shpFiles/roads_{self.name}.shp', driver='ESRI Shapefile')
         self.gdf_roads.to_file(f'geoJsonFiles/roads_{self.name}.geojson', driver='GeoJSON')
@@ -601,5 +603,5 @@ class MapCreator:
         return saved_map_name
     
 # callng the stuff
-map_creator_1 = MapCreator(51.1797305,5.8812762,"Boschmolenplas", 1500, 150, 20)
-map_creator_1.create_detailed_map()
+# map_creator_1 = MapCreator(51.1797305,5.8812762,"Boschmolenplas", 1500, 150, 20)
+# map_creator_1.create_detailed_map()
