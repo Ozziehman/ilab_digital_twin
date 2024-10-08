@@ -380,7 +380,7 @@ class JavaScriptInjector:
     }
 
     fetchCloudCoverageImage(); // initial fetch
-    setInterval(fetchCloudCoverageImage(), 60000); // refresh every minute
+    setInterval(fetchCloudCoverageImage, 60000); // refresh every minute
 </script>
     """
         self.weather_report_script = self.weather_report_script.replace("{{ latitude }}", str(latitude))
@@ -603,5 +603,5 @@ class MapCreator:
         return saved_map_name
     
 # callng the stuff
-# map_creator_1 = MapCreator(51.1797305,5.8812762,"Boschmolenplas", 1500, 150, 20)
-# map_creator_1.create_detailed_map()
+map_creator_1 = MapCreator(51.1797305,5.8812762,"Boschmolenplas", 1500, 150, 20)
+map_creator_1.create_detailed_map()
