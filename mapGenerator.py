@@ -356,6 +356,8 @@ class JavaScriptInjector:
     cloudCoverageLayer.addTo(mapObject); 
     L.control.layers(null, { 'Cloud Coverage': cloudCoverageLayer }).addTo(mapObject);
 
+    let currentCloudCoverageOverlay = null;
+    
     async function fetchCloudCoverageImage() {
         const now = new Date();
         const reportTimeEpoch = Math.floor(now.getTime() / 1000); // convert to UNIX time
@@ -374,6 +376,11 @@ class JavaScriptInjector:
         const apiUrl = `https://tile.openweathermap.org/map/clouds_new/${zoomLevel}/${x}/${y}.png?appid={{ API_KEY_OPENWEATHERMAP }}&forecast=${reportTimeEpoch}`;
         console.log(apiUrl);
         
+        //Remove the previous overlay
+        if (currentCloudCoverageOverlay) {
+        cloudCoverageLayer.removeLayer(currentCloudCoverageOverlay);
+        }
+
         // overlay iamg over the map
         const cloudCoverageOverlay = L.imageOverlay(apiUrl, mapObject.getBounds());
         cloudCoverageOverlay.addTo(cloudCoverageLayer);
