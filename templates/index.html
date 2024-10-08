@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate a Map</title>
+    <style>
+     
+        body{
+            background-color: #001542e7;
+            font-family: 'Courier New', Courier, monospace;
+        
+        }
+        .center {
+            height: 100vh;
+            flex-direction: column;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .button {
+            font-weight: bold;
+            text-decoration: none;
+            color: #eeeeee;
+            transition: background-color 0.3s ease;
+            display: inline-block;
+            text-align: center;
+            background-color: rgb(186, 132, 132);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            padding: 10px 20px;
+            font-size: 16px; 
+        }
+        .button:hover {
+            background-color: #95eec9b3;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        label, input {
+            margin: 5px 0;
+        }
+        input {
+            padding: 5px;
+            font-size: 14px;
+        }
+        .loading {
+            animation: spin 2s linear infinite;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #a9a9a9;
+            width: 120px;
+            height: 120px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="center" id="filling_field">
+        <h1>Generate a Map</h1>
+        <p>Please be mindful of the area entered, it requires a lot of space and time to generate</p>
+        <form action="/generate_map" method="post" onsubmit="loading_popup()">
+            <label for="latitude">Latitude:</label>
+            <input type="text" id="latitude" name="latitude" required><br><br>
+
+            <label for="longitude">Longitude:</label>
+            <input type="text" id="longitude" name="longitude" required><br><br>
+
+            <label for="name">Map Name:</label>
+            <input type="text" id="name" name="name" required><br><br>
+
+            <label for="area">Area:</label>
+            <input type="number" id="area" name="area" required><br><br>
+            
+            <button class="button" type="submit">Generate map for this area</button>
+        </form>
+    </div>
+    <div class="loading" id="loading_symbol"></div>
+</body>
+<script>
+    function loading_popup() {
+        var field = document.getElementById("filling_field");
+        var loading_symbol = document.getElementById("loading_symbol");
+        field.style.display = 'none';
+        loading_symbol.style.display = 'block';
+    }
+</script>
+</html>
