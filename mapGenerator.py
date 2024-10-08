@@ -376,14 +376,14 @@ class JavaScriptInjector:
         const apiUrl = `https://tile.openweathermap.org/map/clouds_new/${zoomLevel}/${x}/${y}.png?appid={{ API_KEY_OPENWEATHERMAP }}&forecast=${reportTimeEpoch}`;
         console.log(apiUrl);
         
-        //Remove the previous overlay
+        // remove previous laye if exists
         if (currentCloudCoverageOverlay) {
-        cloudCoverageLayer.removeLayer(currentCloudCoverageOverlay);
+            cloudCoverageLayer.removeLayer(currentCloudCoverageOverlay);
         }
 
-        // overlay iamg over the map
-        const cloudCoverageOverlay = L.imageOverlay(apiUrl, mapObject.getBounds());
-        cloudCoverageOverlay.addTo(cloudCoverageLayer);
+        // overlay image over the map
+        currentCloudCoverageOverlay = L.imageOverlay(apiUrl, mapObject.getBounds());
+        currentCloudCoverageOverlay.addTo(cloudCoverageLayer);
     }
 
     fetchCloudCoverageImage(); // initial fetch
