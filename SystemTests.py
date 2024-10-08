@@ -10,7 +10,7 @@ systemTestGenerator = SystemTestGenerator()
 
 # locations in the netherlands
 
-# Test 1, Rotterdam
+#Test 1, Rotterdam
 try:
     name1 = systemTestGenerator.system_test(51.9225,4.47917,"Rotterdam", 1000, 100, 20)
     print("Test 1 succeeded")
@@ -52,7 +52,35 @@ try:
 except Exception as e:
     print("Test 2 failed: ", e)
 
+# Test 7, Eindhoven
+try:
+    name7 = systemTestGenerator.system_test(51.4416,5.4697,"Eindhoven", 1000, 100, 20)
+    print("Test 7 succeeded")
+except Exception as e:
+    print("Test 7 failed: ", e)
+
+# Test 8, Breda
+try:
+    name8 = systemTestGenerator.system_test(51.5864,4.7759,"Breda", 1000, 100, 20)
+    print("Test 8 succeeded")
+except Exception as e:
+    print("Test 8 failed: ", e)
+
+# Test 9, Tilburg
+try:
+    name9 = systemTestGenerator.system_test(51.5590,5.0913,"Tilburg", 1000, 100, 20)
+    print("Test 9 succeeded")
+except Exception as e:
+    print("Test 9 failed: ", e)
+
+# Test 10, Den Bosch
+try:
+    name10 = systemTestGenerator.system_test(51.6978,5.3037,"Den Bosch", 1000, 100, 20)
+    print("Test 10 succeeded")
+except Exception as e:
+    print("Test 10 failed: ", e)
+
 print("system tests completed successfully")
-print("The names of the maps are: ", name1, name2, name3, name4, name5, name6)
+print("The names of the maps are: ", name1, name2, name3, name4, name5, name6, name7, name8, name9, name10)
 
 
