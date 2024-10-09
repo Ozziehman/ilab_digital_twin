@@ -417,7 +417,10 @@ class MapCreator:
         self.m = folium.Map(location=[self.latitude, self.longitude], zoom_start=8)
         self.javaScriptInjector = JavaScriptInjector()
         self.map_name = f'static/maps/map_{self.name}.html'
-
+        folium.TileLayer('openstreetmap').add_to(self.m)
+        folium.TileLayer('cartodbpositron').add_to(self.m)
+        folium.TileLayer('cartodbdark_matter').add_to(self.m)
+        
     def download_road_network_data(self):
         print("Downloading road network..")
         G = ox.graph_from_point(self.point, dist=self.load_dist, network_type='all')
