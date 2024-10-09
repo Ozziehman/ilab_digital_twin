@@ -6,7 +6,6 @@ import srtm
 from folium.plugins import HeatMap
 import os 
 import numpy as np
-from shapely.geometry import Point
 
 if not os.path.exists('shpFiles'):
     os.makedirs('shpFiles')
@@ -21,6 +20,9 @@ if not os.path.exists('static/maps'):
     os.makedirs('static/maps')
 
 class MapStyler:
+    """
+    Class containing the styles for the map elements
+    """
     @staticmethod
     def style_roads(x):
         return {'color': 'blue', 'weight': 2}
@@ -50,6 +52,16 @@ class MapStyler:
         return {'fillColor': 'red','color': 'purple','weight': 1,'fillOpacity': 0.2}
 
 class DataDownloader:
+    """
+    Downloads data from OpenStreetMap
+
+    Parameters:
+    latitude: float, latitude of the location
+    longitude: float, longitude of the location
+    dist: int, distance in meters to load the infrastructure data
+    max_retries: int, max number of retries to download the data
+    sleep_time: int, time in seconds to sleep between retries
+    """
     def __init__(self, latitude, longitude, dist=1000, max_retries=5, sleep_time=5):
         
         self.point = (latitude, longitude)
@@ -58,7 +70,12 @@ class DataDownloader:
         self.sleep_time = sleep_time
     
     def download_with_retry(self, tags):
-        """reattemps, because sometimes server fails, the point, dist and other settings are made when making the object"""
+        """
+        reattemps, because sometimes server fails, the point, dist and other settings are made when making the object
+
+        Parameters:
+        tags: dict, tags to filter the data
+        """
         for attempt in range(self.max_retries):
             try:
                 return ox.features_from_point(self.point, tags=tags, dist=self.dist)
@@ -68,8 +85,17 @@ class DataDownloader:
         raise Exception("Failed to download")
     
 class JavaScriptInjector:
+    """
+    Class that handles all the javascript injecting into the HTML
+    """
     def inject_interactive_marker(self, map_file):
-        """Injects live update js into the html"""
+        """
+        Injects live update js into the html.
+        This will add a marker on the map when clicked on a location
+
+        Parameters:
+        map_file: str, path to the map file
+        """
         with open(map_file, 'r', encoding='utf-8') as f:
             html_content = f.read()
 
@@ -102,7 +128,24 @@ class JavaScriptInjector:
         print(f"interactive marker js injected and map saved back as {map_file}")
 
     def inject_camera_simulation_script(self, map_file, camera_latitude, camera_longitude, direction, width, reach, camera_name, video_source, cone_outline_color = 'red', cone_fill_color = 'orange', camera_outline_color = 'blue', camera_fill_color = 'lightblue'):
-        """Inject script to show camera 'simulation', IF pointing upwards angle1 would be the left bound and angle2 the right side"""
+        """
+        Inject script to show camera 'simulation', If pointing upwards angle1 would be the left bound and angle2 the right side.
+        The cone shape is made by creating a polygon with a lot of points, the more points the smoother the shape.
+
+        Parameters:
+        map_file: str, path to the map file
+        camera_latitude: float, latitude of the camera
+        camera_longitude: float, longitude of the camera
+        direction: int, direction the camera is pointing in degrees
+        width: int, width of the camera view in degrees
+        reach: int, reach of the camera in meters
+        camera_name: str, name of the camera
+        video_source: str, source of the video to show in the popup
+        cone_outline_color: str, color of the outline of the cone
+        cone_fill_color: str, color of the fill of the cone
+        camera_outline_color: str, color of the outline of the camera
+        camera_fill_color: str, color of the fill of the camera
+        """
         
         with open(map_file, 'r', encoding='utf-8') as f:
             html_content = f.read()
@@ -214,6 +257,18 @@ class JavaScriptInjector:
         print(f"camrea simulation ({camera_name}) injected and map saved back as {map_file}\nwith paramaters:\nlat: {camera_latitude} \nlon: {camera_longitude} \ndirection: {direction} \nwidth: {width} \nreach: {reach} meters")
         
     def inject_weather_report_script(self, map_file, latitude, longitude, api_key_openweathermap):
+        """
+        Injects weather report js into the html
+        This will show a draggable window with weather report and a slider to change the hour
+
+        This will also create a cloud coverage layer that will overlay the map with the cloud coverage
+
+        Parameters:
+        map_file: str, path to the map file
+        latitude: float, latitude of the location
+        longitude: float, longitude of the location
+        api_key_openweathermap: str, api key for openweathermap
+        """
         # use open-meteo to get weather report
         with open(map_file, 'r', encoding='utf-8') as f:
             html_content = f.read()
@@ -404,6 +459,15 @@ class JavaScriptInjector:
         print(f"weather report js injected and map saved back as {map_file}")
     
 class MapCreator:
+    """This class combines all elements into one so a map can be generated by using the create_detailed_map function
+    Parameters:
+    latitude: float, latitude of the location
+    longitude: float, longitude of the location
+    name: str, name of the location
+    load_dist: int, distance in meters to load the infrastructure data
+    water_buffer_size: int, size of the buffer around waterways
+    road_buffer_size: int, size of the buffer around roads
+    """
     def __init__(self, latitude, longitude, name, load_dist=2000, water_buffer_size = 150, road_buffer_size=20):
         self.latitude = latitude
         self.longitude = longitude
@@ -417,11 +481,47 @@ class MapCreator:
         self.m = folium.Map(location=[self.latitude, self.longitude], zoom_start=8)
         self.javaScriptInjector = JavaScriptInjector()
         self.map_name = f'static/maps/map_{self.name}.html'
-        folium.TileLayer('openstreetmap').add_to(self.m)
-        folium.TileLayer('cartodbpositron').add_to(self.m)
-        folium.TileLayer('cartodbdark_matter').add_to(self.m)
+
+        # Base map is added automatically
+
+        # Dark map
+        folium.TileLayer(
+            tiles='cartodbdark_matter',
+            name='CartoDB Dark Matter',
+            attr='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors & CartoDB',
+            overlay=False,
+            control=True           
+        ).add_to(self.m)
+
+        # Netherlands specific maps
+        folium.TileLayer(
+            tiles='https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/grijs/EPSG:3857/{z}/{x}/{y}.png',
+            attr='PDOK',
+            name='Nederland Grijs',
+            overlay=False,
+            control=True
+        ).add_to(self.m)
+
+        folium.TileLayer(
+            tiles='https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/pastel/EPSG:3857/{z}/{x}/{y}.png',
+            attr='PDOK',
+            name='Nederland Pastel',
+            overlay=False,
+            control=True
+        ).add_to(self.m)
+
+        # Base map (English names)
+        folium.TileLayer(
+            tiles='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+            attr='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors & CartoDB',
+            name='CartoDB Voyager',
+            overlay=False
+        ).add_to(self.m)
         
     def download_road_network_data(self):
+        """
+        Downloads road network data and saves it as shapefiles and geojson
+        """
         print("Downloading road network..")
         G = ox.graph_from_point(self.point, dist=self.load_dist, network_type='all')
 
@@ -434,6 +534,9 @@ class MapCreator:
         self.gdf_roads.to_file(f'geoJsonFiles/roads_{self.name}.geojson', driver='GeoJSON')
 
     def download_building_data(self):
+        """
+        Downloads building data and saves it as shapefiles and geojson
+        """
         print("Downloading buildings..")
         self.buildings = self.dataDownloader.download_with_retry(tags={'building': True})
         self.buildings = self.buildings[self.buildings.geometry.type == 'Polygon']
@@ -441,6 +544,9 @@ class MapCreator:
         self.buildings.to_file(f'geoJsonFiles/buildings_{self.name}.geojson', driver='GeoJSON')
 
     def download_waterway_data(self):
+        """
+        Downloads waterway data and saves it as shapefiles and geojson
+        """
         print("Downloading waterways..")
         self.waterways = self.dataDownloader.download_with_retry(tags={'waterway': True})
         self.waterways = self.waterways[self.waterways.geometry.type == 'LineString']
@@ -448,6 +554,15 @@ class MapCreator:
         self.waterways.to_file(f'geoJsonFiles/waterways_{self.name}.geojson', driver='GeoJSON') 
     
     def add_buildings_tooltips(self, buildings, buildings_fg, styler, extra_data=None):
+        """
+        Adds tooltips to the buildings, only data that is not null or nan will be shown in the tooltip
+
+        Parameters:
+        buildings: GeoDataFrame, buildings data
+        buildings_fg: folium.FeatureGroup, folium FeatureGroup to add the buildings to
+        styler: function, function to style the buildings
+        extra_data: dict, extra data to show in the tooltip
+        """
         for _, building in buildings.iterrows():
             geometry = building.geometry
             properties = building.drop('geometry').to_dict() # gets properties
@@ -466,8 +581,8 @@ class MapCreator:
         return buildings_fg
     
     def render_altitude_heatmap(self):
-        #TODO: make the heatmap height and width change to the infrastructural data loaded to save space
-        """Renders altitude heatmap of the area"""
+        """Renders altitude heatmap of the area with the use of SRTM data, 
+        heatmap will be drawn only to the edges of the loaded infrastructure"""
         self.elevation_data = srtm.get_data()
         # set bound to the outer part of the loaded infrastructure
         self.lat_min = min(self.buildings.geometry.bounds.miny.min(), self.roads.geometry.bounds.miny.min())
@@ -489,8 +604,7 @@ class MapCreator:
         self.heatmap.add_to(self.elevation_heatmap)
         self.elevation_heatmap.add_to(self.m)
 
-        # TODO: find more efficient way to do this
-        #convert heatmap to geodataframe to save as geojson
+        # convert heatmap to geodataframe to save as geojson, this is not needed but can be useful in the future, WARNING: LARGE FILE, LONG PROCESSING TIME
         # print("Creating heatmap gdf")
         # self.elevation_heatmap_geometry = [Point(lon, lat) for lat, lon, intensity in self.heatmap_data]
         # self.gdf_elevation_heatmap = gpd.GeoDataFrame(self.heatmap_data, geometry=self.elevation_heatmap_geometry, columns=['Latitude', 'Longitude', 'Intensity'])
@@ -498,6 +612,7 @@ class MapCreator:
         # print(f"Heatmap creaated and also saved as GeoJSON as geoJsonFiles/elevation_heatmap_{self.name}.geojson ")
 
     def render_buffer_area_road(self):
+        """Renders buffer area around roads and buildings nearby roads"""
         self.projected_roads = self.roads.to_crs(epsg=self.epsg_code)
         self.road_buffer = self.projected_roads.buffer(self.road_buffer_size)
         self.road_buffer = self.road_buffer.to_crs(self.roads.crs)
@@ -519,6 +634,7 @@ class MapCreator:
         self.nearby_buildings_road_fg.add_to(self.m)
 
     def render_buffer_area_water(self):
+        """Renders buffer area around waterways and buildings nearby waterways"""
         self.projected_waterways = self.waterways.to_crs(epsg=self.epsg_code)
         self.water_buffer = self.projected_waterways.buffer(self.water_buffer_size)
         self.water_buffer = self.water_buffer.to_crs(self.waterways.crs)
@@ -539,10 +655,11 @@ class MapCreator:
         self.nearby_buildings_water_fg = self.add_buildings_tooltips(self.nearby_buildings_water, self.nearby_buildings_water_fg, styler=self.mapStyler.style_nearby_buildings_water, extra_data = {'Digital Twin Name': self.name, 'Building Type': 'within water buffer'})
         self.nearby_buildings_water_fg.add_to(self.m)
 
-    def render_buffer_areas(self, water_buffer=True, road_buffer=True, weather_report=True):
-        self.utm_zone = int((self.longitude + 180) // 6) + 1
-        self.is_northern_hemisphere = self.latitude >= 0
-        self.epsg_code = 32600 + self.utm_zone if self.is_northern_hemisphere else 32700 + self.utm_zone
+    def render_buffer_areas(self, water_buffer=True, road_buffer=True):
+        """Calls buffer area functions to render buffer areas"""
+        self.utm_zone = int((self.longitude + 180) // 6) + 1 # calculate UTM zone
+        self.is_northern_hemisphere = self.latitude >= 0 # check if in northern hemisphere
+        self.epsg_code = 32600 + self.utm_zone if self.is_northern_hemisphere else 32700 + self.utm_zone # calculate EPSG code
 
         if water_buffer==True:
             self.render_buffer_area_water()
@@ -550,67 +667,72 @@ class MapCreator:
             self.render_buffer_area_road()
 
     def save_map(self, interactive_marker=True, camera_simulation=True, weather_report=True):
-        """Saves barebones map with static info"""
+        """
+        Saves barebones map with static info
+        
+        Parameters:
+        interactive_marker: bool, if True, interactive marker will be added
+        camera_simulation: bool, if True, camera simulation will be added
+        weather_report: bool, if True, weather report will be added
+        """
         self.m.save(self.map_name)
 
         # these NEED to take place AFTER saving the base html with static info
         if interactive_marker == True:
             self.javaScriptInjector.inject_interactive_marker(self.map_name)
         if camera_simulation == True:
-            # TODO: get this from test to definitive:
+            # Adds camera simulation scripts
             self.javaScriptInjector.inject_camera_simulation_script(self.map_name, camera_latitude=51.176858, camera_longitude=5.882079, direction=-60, width=94, reach=200, camera_name='camera 1 red', video_source='https://www.youtube.com/embed/4qOxFyZLcl0?si=VO9YbHXW7mDSENHO', cone_outline_color='red', cone_fill_color='lightred', camera_outline_color='blue', camera_fill_color='lightblue')
             self.javaScriptInjector.inject_camera_simulation_script(self.map_name, camera_latitude=51.179512, camera_longitude=5.878201, direction=180, width=94, reach=200, camera_name='camera 2 blue', video_source='https://www.youtube.com/embed/4qOxFyZLcl0?si=VO9YbHXW7mDSENHO', cone_outline_color='blue', cone_fill_color='lightblue', camera_outline_color='red', camera_fill_color='lightred')
             self.javaScriptInjector.inject_camera_simulation_script(self.map_name, camera_latitude=51.184346, camera_longitude=5.876827, direction=278, width=137, reach=800, camera_name='camera 3 green', video_source='https://www.youtube.com/embed/lffpBLDQqqc?si=H6um6OemAf8UQc56', cone_outline_color='green', cone_fill_color='lightgreen', camera_outline_color='purple', camera_fill_color='lightpurple')
         if weather_report == True:
-            # Should be changed to a more secure way of storing the API key
+            # Should be changed to a more secure way of storing the API key when fully released
             self.api_key_openweathermap = "d0160058812e1e5f9b9bdfb04c5ffca9"
             self.javaScriptInjector.inject_weather_report_script(self.map_name, self.latitude, self.longitude, self.api_key_openweathermap)
     
         return self.map_name
 
     def create_detailed_map(self):
+        """
+        Creates detailed map with all the data and saves it as a static html
+        """
         #download data with downloader
         self.download_building_data()
         self.download_road_network_data()
         self.download_waterway_data()
         
         #read saved files
-        self.roads = gpd.read_file(f'shpFiles/roads_{self.name}.shp')
-        self.all_buildings = gpd.read_file(f'shpFiles/buildings_{self.name}.shp')
-        self.waterways = gpd.read_file(f'shpFiles/waterways_{self.name}.shp')
+        self.roads = gpd.read_file(f'shpFiles/roads_{self.name}.shp') # read roads
+        self.all_buildings = gpd.read_file(f'shpFiles/buildings_{self.name}.shp') # read buildings
+        self.waterways = gpd.read_file(f'shpFiles/waterways_{self.name}.shp') # read waterways
         
         # add roads to a featuregroup
-        self.roads_fg = folium.FeatureGroup(name='Roads')
-        folium.GeoJson(self.roads,style_function=self.mapStyler.style_roads).add_to(self.roads_fg)
-        self.roads_fg.add_to(self.m)
+        self.roads_fg = folium.FeatureGroup(name='Roads') # create featuregroup
+        folium.GeoJson(self.roads,style_function=self.mapStyler.style_roads).add_to(self.roads_fg) # add roads to featuregroup
+        self.roads_fg.add_to(self.m) # add featuregroup to map
 
         # add waterways to a featuregroup
-        self.waterways_fg = folium.FeatureGroup(name='Waterways')
-        folium.GeoJson(self.waterways,style_function=self.mapStyler.style_waterways).add_to(self.waterways_fg)
-        self.waterways_fg.add_to(self.m)
+        self.waterways_fg = folium.FeatureGroup(name='Waterways') # create featuregroup
+        folium.GeoJson(self.waterways,style_function=self.mapStyler.style_waterways).add_to(self.waterways_fg) # add waterways to featuregroup
+        self.waterways_fg.add_to(self.m) # add featuregroup to map
 
         # add all buildings to featuregroup
-        self.all_buildings_fg = folium.FeatureGroup(name="All buildings")
-        folium.GeoJson(self.all_buildings, style_function=self.mapStyler.style_buildings).add_to(self.all_buildings_fg)
-        self.all_buildings_fg = self.add_buildings_tooltips(self.all_buildings, self.all_buildings_fg, styler=self.mapStyler.style_buildings, extra_data = {'Digital Twin Name': self.name, 'Building Type': 'general'})
-        self.all_buildings_fg.add_to(self.m)
+        self.all_buildings_fg = folium.FeatureGroup(name="All buildings") # create featuregroup
+        folium.GeoJson(self.all_buildings, style_function=self.mapStyler.style_buildings).add_to(self.all_buildings_fg) # add buildings to featuregroup
+        self.all_buildings_fg = self.add_buildings_tooltips(self.all_buildings, self.all_buildings_fg, styler=self.mapStyler.style_buildings, extra_data = {'Digital Twin Name': self.name, 'Building Type': 'general'}) # add tooltips to buildings
+        self.all_buildings_fg.add_to(self.m) # add featuregroup to map
         
-        #render buffer areas, change the variables to include or not
-        self.render_buffer_areas(water_buffer=True, road_buffer=True)
-        #render altitude heatmap, BE CAUTIOUS, at large area options this will use a LOT of storage
-        self.render_altitude_heatmap()
+        self.render_buffer_areas(water_buffer=True, road_buffer=True) # render buffer areas
+        self.render_altitude_heatmap() #render altitude heatmap, BE CAUTIOUS, at large area options this will use a LOT of storage
 
-        # add layer control
-        folium.LayerControl(collapsed=False, draggable=True).add_to(self.m)
-        
-        # save map, its converted to a static html
-        
-        self.save_map()
-        
-        saved_map_name = f'maps/map_{self.name}.html'
-        print(f"Map saved under {saved_map_name} in the static folder.")
+        folium.LayerControl(collapsed=False, draggable=True).add_to(self.m) # add layer control to map
 
-        return saved_map_name
+        self.save_map() # save map with static info
+        
+        saved_map_name = f'maps/map_{self.name}.html' # name of the saved map WITHIN the static folder
+        print(f"Map saved under {saved_map_name} in the static folder.") # print where the map is saved
+
+        return saved_map_name # return the name of the saved map within the static folder
     
 # callng the stuff
 map_creator_1 = MapCreator(51.1797305,5.8812762,"Boschmolenplas", 1500, 150, 20)
