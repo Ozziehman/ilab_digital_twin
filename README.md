@@ -19,6 +19,11 @@ elements are hardcoded to take place in either of those two named locations.
 - **Camera Simulation:** Simulates camera views with configurable parameters.
 - **Weather Report:** Displays a weather report with a draggable window and cloud coverage overlay.
 - **Several different map styles:** The user can switch between several styles including some that only display the Netherlands
+    - Standard OSM map
+    - Dark mode (CartoDB)
+    - Netherlands Grey (PDOK), very useful for visualizing cloud coverage
+    - Netherlands Pastel (PDOK)
+    - English location names (CartoDB)
 
 All layers can be switched on and off from the top right of the generated HTML page.
 
