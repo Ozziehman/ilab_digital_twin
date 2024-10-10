@@ -8,8 +8,8 @@ The goal of this project was to develop a Digital Twin to as much detail as poss
 The application works for both of these location and essentially every other on-land location in the world, but certain simulation
 elements are hardcoded to take place in either of those two named locations.
 
-## Features
-
+## Core Features
+### Map Layers
 - **Road Networks:** Downloads and displays road networks from OpenStreetMap.
 - **Buildings:** Downloads and displays building data from OpenStreetMap.
 - **Waterways:** Downloads and displays waterway data from OpenStreetMap.
@@ -18,6 +18,9 @@ elements are hardcoded to take place in either of those two named locations.
 - **Interactive Marker:** Adds an interactive marker to the map.
 - **Camera Simulation:** Simulates camera views with configurable parameters.
 - **Weather Report:** Displays a weather report with a draggable window and cloud coverage overlay.
+- **Several different map styles:** The user can switch between several styles including some that only display the Netherlands
+
+All layers can be switched on and off from the top right of the generated HTML page.
 
 ## Installation
 
@@ -55,8 +58,6 @@ map_creator.create_detailed_map()
 
 ### Generated Map
 The generated map will be exported and saved as an HTML file in the `static/maps` folder with a variation of the `name map_<location_name>.html`
-
-
 
 ## Classes and methods
 
