@@ -133,7 +133,7 @@ This class downloads data from OpenStreetMap.
 
 ### JavaScriptInjector
 
-This class handles all the JavaScript injecting into the HTML. Every method will read the HTML and 
+This class handles all the JavaScript injecting into the HTML. Every method will read the HTML and add the Javascript to it.
 
 #### Methods
 - `inject_interactive_marker(self, map_file)` Injects live update JavaScript into the HTML to add a marker on the map when clicked.
