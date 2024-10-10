@@ -468,7 +468,7 @@ class MapCreator:
     water_buffer_size: int, size of the buffer around waterways
     road_buffer_size: int, size of the buffer around roads
     """
-    def __init__(self, latitude, longitude, name, load_dist=2000, water_buffer_size = 150, road_buffer_size=20):
+    def __init__(self, latitude, longitude, name, load_dist=2000, water_buffer_size = 150, road_buffer_size=20, cameras=[]):
         self.latitude = latitude
         self.longitude = longitude
         self.point = (latitude, longitude)
@@ -481,6 +481,7 @@ class MapCreator:
         self.m = folium.Map(location=[self.latitude, self.longitude], zoom_start=8)
         self.javaScriptInjector = JavaScriptInjector()
         self.map_name = f'static/maps/map_{self.name}.html'
+        self.cameras = cameras
 
         # Base map is added automatically
 
@@ -682,9 +683,21 @@ class MapCreator:
             self.javaScriptInjector.inject_interactive_marker(self.map_name)
         if camera_simulation == True:
             # Adds camera simulation scripts
-            self.javaScriptInjector.inject_camera_simulation_script(self.map_name, camera_latitude=51.176858, camera_longitude=5.882079, direction=-60, width=94, reach=200, camera_name='camera 1 red', video_source='https://www.youtube.com/embed/4qOxFyZLcl0?si=VO9YbHXW7mDSENHO', cone_outline_color='red', cone_fill_color='lightred', camera_outline_color='blue', camera_fill_color='lightblue')
-            self.javaScriptInjector.inject_camera_simulation_script(self.map_name, camera_latitude=51.179512, camera_longitude=5.878201, direction=180, width=94, reach=200, camera_name='camera 2 blue', video_source='https://www.youtube.com/embed/4qOxFyZLcl0?si=VO9YbHXW7mDSENHO', cone_outline_color='blue', cone_fill_color='lightblue', camera_outline_color='red', camera_fill_color='lightred')
-            self.javaScriptInjector.inject_camera_simulation_script(self.map_name, camera_latitude=51.184346, camera_longitude=5.876827, direction=278, width=137, reach=800, camera_name='camera 3 green', video_source='https://www.youtube.com/embed/lffpBLDQqqc?si=H6um6OemAf8UQc56', cone_outline_color='green', cone_fill_color='lightgreen', camera_outline_color='purple', camera_fill_color='lightpurple')
+            for camera in self.cameras:
+                self.javaScriptInjector.inject_camera_simulation_script(
+                    self.map_name,
+                    camera_latitude=camera['latitude'],
+                    camera_longitude=camera['longitude'],
+                    direction=camera['direction'],
+                    width=camera['width'],
+                    reach=camera['reach'],
+                    camera_name=camera['name'],
+                    video_source=camera['video_source'],
+                    cone_outline_color=camera.get('cone_outline_color', 'red'),
+                    cone_fill_color=camera.get('cone_fill_color', 'orange'),
+                    camera_outline_color=camera.get('camera_outline_color', 'blue'),
+                    camera_fill_color=camera.get('camera_fill_color', 'lightblue')
+                )
         if weather_report == True:
             # Should be changed to a more secure way of storing the API key when fully released
             self.api_key_openweathermap = "d0160058812e1e5f9b9bdfb04c5ffca9"
@@ -735,5 +748,49 @@ class MapCreator:
         return saved_map_name # return the name of the saved map within the static folder
     
 # callng the stuff
-map_creator_1 = MapCreator(51.1797305,5.8812762,"Boschmolenplas", 1500, 150, 20)
-map_creator_1.create_detailed_map()
+if __name__ == "__main__":
+    # Define cameras with their parameters
+    cameras = [
+        {
+            'latitude': 51.176858,
+            'longitude': 5.882079,
+            'direction': -60,
+            'width': 94,
+            'reach': 200,
+            'name': 'camera 1 red',
+            'video_source': 'https://www.youtube.com/embed/4qOxFyZLcl0?si=VO9YbHXW7mDSENHO',
+            'cone_outline_color': 'red',
+            'cone_fill_color': 'lightred',
+            'camera_outline_color': 'blue',
+            'camera_fill_color': 'lightblue'
+        },
+        {
+            'latitude': 51.179512,
+            'longitude': 5.878201,
+            'direction': 180,
+            'width': 94,
+            'reach': 200,
+            'name': 'camera 2 blue',
+            'video_source': 'https://www.youtube.com/embed/4qOxFyZLcl0?si=VO9YbHXW7mDSENHO',
+            'cone_outline_color': 'blue',
+            'cone_fill_color': 'lightblue',
+            'camera_outline_color': 'red',
+            'camera_fill_color': 'lightred'
+        },
+        {
+            'latitude': 51.184346,
+            'longitude': 5.876827,
+            'direction': 278,
+            'width': 137,
+            'reach': 800,
+            'name': 'camera 3 green',
+            'video_source': 'https://www.youtube.com/embed/lffpBLDQqqc?si=H6um6OemAf8UQc56',
+            'cone_outline_color': 'green',
+            'cone_fill_color': 'lightgreen',
+            'camera_outline_color': 'purple',
+            'camera_fill_color': 'lightpurple'
+        }
+    ]
+
+    map_creator_1 = MapCreator(51.1797305,5.8812762,"Boschmolenplas", 1500, 150, 20, cameras)
+    map_creator_1.create_detailed_map()

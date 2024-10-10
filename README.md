@@ -62,7 +62,7 @@ map_creator.create_detailed_map()
 - `road_buffer_size`: Size of the buffer around roads.
 
 ### Generated Map
-The generated map will be exported and saved as an HTML file in the `static/maps` folder with a variation of the `name map_<location_name>.html`
+The generated map will be exported and saved as an HTML file in the `static/maps` folder with a variation of the `name map_<location_name>.html`.
 
 ## Classes and methods
 
@@ -70,7 +70,7 @@ The generated map will be exported and saved as an HTML file in the `static/maps
 This class is the location where everything happens, this class uses the other classes to combine into a HTML digital twin.
 
 #### Methods
-- `__init__(self, latitude, longitude, name, load_dist=2000, water_buffer_size=150, road_buffer_size=20)` Initializes the MapCreator instance with the specified parameters.
+- `__init__(self, latitude, longitude, name, load_dist=2000, water_buffer_size=150, road_buffer_size=20, cameras=[])` Initializes the MapCreator instance with the specified parameters.
     - ##### Parameters
         - `latitude`: Latitude of the location.
         - `longitude`: Longitude of the location.
@@ -78,6 +78,7 @@ This class is the location where everything happens, this class uses the other c
         - `load_dist`: Distance in meters to load the infrastructure data.
         - `water_buffer_size`: Size of the buffer around waterways.
         - `road_buffer_size`: Size of the buffer around roads.
+        - `cameras`: List of to be simulated cameras with their properties.
 
 - `create_detailed_map(self)` Creates a detailed map with all the data and saves it as a static HTML file.
 - `download_road_network_data(self)` Downloads road network data and saves it as shapefiles and GeoJSON.
