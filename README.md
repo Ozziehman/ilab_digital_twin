@@ -4,6 +4,7 @@ This project is made in collaboration with the Innovation Lab (iLab) of the poli
 The goal of this project was to develop a Digital Twin to as much detail as possible with openly available data of the places:
 - [Maasterp Ohé en Laak](https://www.google.nl/maps/@51.1111538,5.8207123,15.25z?entry=ttu&g_ep=EgoyMDI0MTAwNy4xIKXMDSoASAFQAw%3D%3D)
 - [Boschmolenplas](https://www.google.nl/maps/@51.1821348,5.8789938,15.25z?entry=ttu&g_ep=EgoyMDI0MTAwNy4xIKXMDSoASAFQAw%3D%3D)
+
 The application works for both of these location and essentially every other on-land location in the world, but certain simulation
 elements are hardcoded to take place in either of those two named locations.
 
