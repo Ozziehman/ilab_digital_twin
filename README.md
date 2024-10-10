@@ -1,6 +1,11 @@
 # ilab_digital_twin
 
-This project generates detailed maps with various layers and features using Folium, OpenStreetMap, and other geospatial data sources. The generated maps include road networks, buildings, waterways, buffer areas, altitude heatmaps, and interactive features such as camera simulations and weather reports.
+This project is made in collaboration with the Innovation Lab (iLab) of the police in Heerlen(Limburg, Netherlands).
+The goal of this project was to develop a Digital Twin to as much detail as possible with openly available data of the places:
+- [Maasterp Ohé en Laak](https://www.google.nl/maps/@51.1111538,5.8207123,15.25z?entry=ttu&g_ep=EgoyMDI0MTAwNy4xIKXMDSoASAFQAw%3D%3D)
+- [Boschmolenplas](https://www.google.nl/maps/@51.1821348,5.8789938,15.25z?entry=ttu&g_ep=EgoyMDI0MTAwNy4xIKXMDSoASAFQAw%3D%3D)
+The application works for both of these location and essentially every other on-land location in the world, but certain simulation
+elements are hardcoded to take place in either of those two named locations.
 
 ## Features
 
@@ -17,7 +22,7 @@ This project generates detailed maps with various layers and features using Foli
 
 1. **Clone the repository:**
     ```sh
-    git clone https://github.com/Ozziehman/ilab_digital_twin.git
+    git clone https://github.com/Research-Center-Data-Intelligence/ilab_digital_twin
     cd <repository-directory>
     ```
 
