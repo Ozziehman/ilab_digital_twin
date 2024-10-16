@@ -496,7 +496,7 @@ class JavaScriptInjector:
 
     // gives a nice color hue depending on the value
     function getColorHue(value) {
-        var maxValue = 650; // value at which it's fully red
+        var maxValue = 1800; // value at which it's fully red
         value = Math.min(Math.max(value, 0), maxValue); 
         var hue = (1 - value / maxValue) * 120;
         return `hsl(${hue}, 100%, 50%)`;
@@ -504,7 +504,7 @@ class JavaScriptInjector:
 
     // gives a radius that grows with the value
     function getRadius(value) {
-        var normalizedValue = Math.min(value, 60);
+        var normalizedValue = Math.min(value, 1440);
         return 2 * Math.sqrt(normalizedValue);
     }
 
@@ -532,6 +532,7 @@ class JavaScriptInjector:
         }
     }
 
+    // In an actual product this should be fetched from a server thats connected to sensors
     function addValueToRandomPoint() {
         var keyList = Object.keys(simulationPointsDict);
         var randomIndex = Math.floor(Math.random() * keyList.length);
@@ -587,15 +588,6 @@ class MapCreator:
 
         # Base map is added automatically
 
-        # Dark map
-        folium.TileLayer(
-            tiles='cartodbdark_matter',
-            name='CartoDB Dark Matter',
-            attr='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors & CartoDB',
-            overlay=False,
-            control=True           
-        ).add_to(self.m)
-
         # Netherlands specific maps
         folium.TileLayer(
             tiles='https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/grijs/EPSG:3857/{z}/{x}/{y}.png',
@@ -619,6 +611,15 @@ class MapCreator:
             attr='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors & CartoDB',
             name='CartoDB Voyager',
             overlay=False
+        ).add_to(self.m)
+
+        # Dark map
+        folium.TileLayer(
+            tiles='cartodbdark_matter',
+            name='CartoDB Dark Matter',
+            attr='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors & CartoDB',
+            overlay=False,
+            control=True           
         ).add_to(self.m)
         
     def download_road_network_data(self):
