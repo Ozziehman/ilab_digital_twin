@@ -5,19 +5,14 @@
 body {
         background-color: #000000;
         font-family: Arial, Helvetica, sans-serif;
-    }
-head{
-    height: 20%;
-    width: fit-content;
-    }
+}
 
 header{
-    background-color: 	#154273;
+    background-color: 	#044484;
     height: 10%;
     width: 100%;
     position: fixed;
     top: 0px;
- 
 }
 h1{
     color: #eeeeee;
@@ -32,30 +27,30 @@ h2{
         background-color: 	#ffffff;
 }
     #banner{
-        background-color: 	#154273;
+        background-color: 	#044484;
 }
-    #logo1{
-        
-        position: relative;
-        height: 2%;
-        margin left: 5%;
-        margin top: 5%;
-        z-index: 1;
-}
-    #logo2{
-        position: relative;
-        height: 2%;
-        margin left: 5%;
-        margin top: 5%;
-        z-index: 1;
+    /* #logo1{ */
+        /* margin-top: 0%; */
+        /* position: fixed; */
+        /* height: 1.5%; */
+        /* margin-left: 2%; */
+     
+/* } */
+    /* #logo2{
+        position: fixed;
+        margin-top: 2%;
+        height: 1.5%;
+        margin-left: 2%;
+    
+  
 }
     #logo3{
-        position: relative;
-        height: 2%;
-        margin left: 5%;
-        margin top: 5%;
-        z-index: 1;
-}
+        position: fixed;
+        height: 1.5%;
+        margin-left: 2%;
+        margin-top: 4%;
+        margin-bottom: 5px;
+} */
 
     #titletemplatemap{
         z-index: 2;
@@ -63,12 +58,19 @@ h2{
         
 }
 #header1{
-    position: absolute;
-    height: 20%;
-    margin-top: 0;
-    margin-left: 40%;
-    margin-bottom: 5px;
+    position: center;
+    height: 5%;
+    margin-top: 0%;
+    margin-bottom: 2%;
     padding: auto;
+    z-index: 1;
+}
+#positionlogo{
+    position: absolute;
+    top: 2px;
+    left: 5px;
+    height: 100%;
+    z-index: 2;   
 }
 
 .center {
@@ -78,8 +80,8 @@ h2{
         justify-content: center;
         align-items: center;
         position: relative;
-        padding-top: 5%;
-        }
+        padding-top: 2.5%;
+}
 
     .button {
         background-color: rgb(0, 0, 0);
@@ -96,7 +98,7 @@ h2{
         text-align: center;
 }
     .button:hover {
-        background-color: #2f00ffb3;
+        background-color: #3229b9;
 }
 </style>
 <head>
@@ -108,11 +110,16 @@ h2{
 <body id="banner">
     <header>   
         <div id="header1">
+           
             <h1 id="titletemplatemap">Generated map:</h1></div>
-        
-        <h2 id="logo1" >Map</h2>
-        <h2 id="logo2">Match</h2>
-        <h2 id="logo3">Catch</h2>
+
+        <div id="positionlogo">
+            <a target="_blank">
+                <img src= "{{ url_for('static', filename='mmc.png') }}" alt="Logo" width= "100%" height="100%">
+                </a>
+            <!-- <h2 id="logo1" >Map</h2> -->
+            <!-- <h2 id="logo2">Match</h2> -->
+            <!-- <h2 id="logo3">Catch</h2></div> -->
     </header>
 
     <div>
