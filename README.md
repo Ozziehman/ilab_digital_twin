@@ -1,5 +1,7 @@
 # ilab_digital_twin
 
+Working Python Version: `3.12.3`
+
 This project is made in collaboration with the Innovation Lab (iLab) of the police in Heerlen(Limburg, Netherlands).
 The goal of this project was to develop a Digital Twin to as much detail as possible with openly available data of the places:
 - [Maasterp Ohé en Laak](https://www.google.nl/maps/@51.1111538,5.8207123,15.25z?entry=ttu&g_ep=EgoyMDI0MTAwNy4xIKXMDSoASAFQAw%3D%3D)
@@ -64,13 +66,13 @@ map_creator.create_detailed_map()
 ### Generated Map
 The generated map will be exported and saved as an HTML file in the `static/maps` folder with a variation of the `name map_<location_name>.html`.
 
-## Classes and methods
+## Classes
 
 ### Mapcreator
 This class is the location where everything happens, this class uses the other classes to combine into a HTML digital twin.
 
 #### Methods
-- `__init__(self, latitude, longitude, name, load_dist=2000, water_buffer_size=150, road_buffer_size=20, cameras=[])` Initializes the MapCreator instance with the specified parameters.
+- `__init__(self, latitude, longitude, name, load_dist=2000, water_buffer_size=150, road_buffer_size=20, cameras=[], passage_points)` Initializes the MapCreator instance with the specified parameters.
     - ##### Parameters
         - `latitude`: Latitude of the location.
         - `longitude`: Longitude of the location.
@@ -79,6 +81,7 @@ This class is the location where everything happens, this class uses the other c
         - `water_buffer_size`: Size of the buffer around waterways.
         - `road_buffer_size`: Size of the buffer around roads.
         - `cameras`: List of to be simulated cameras with their properties.
+        - `passage_points`: List of the to be simulated passage sensors that pick up how many people walk or drive by
 
 - `create_detailed_map(self)` Creates a detailed map with all the data and saves it as a static HTML file.
 - `download_road_network_data(self)` Downloads road network data and saves it as shapefiles and GeoJSON.
@@ -97,24 +100,25 @@ This class is the location where everything happens, this class uses the other c
     - ##### Parameters
         - `water_buffer`: Boolean indicating whether to render buffer areas around waterways.
         - `road_buffer`: Boolean indicating whether to render buffer areas around roads.
-- `save_map(self, interactive_marker=True, camera_simulation=True, weather_report=True)` Saves the map with static information and injects interactive features.
+- `save_map(self, interactive_marker=True, camera_simulation=True, weather_report=True, passage_simulation)` Saves the map with static information and injects interactive features.
     - ##### Parameters
         - `interactive_marker`: Boolean indicating whether to add an interactive marker.
         - `camera_simulation`: Boolean indicating whether to add camera simulation.
         - `weather_report`: Boolean indicating whether to add a weather report.
+        - `passage_simulation`: Boolean indicating whether to add passage_simulation
 
 ### MapStyler
 
 This class contains the styles for the map elements.
 
 #### Methods
--`style_roads(x)` Styles the roads.
--`style_waterways(x)` Styles the waterways.
--`style_buildings(x)` Styles the buildings.
--`style_nearby_buildings_water(x)` Styles the buildings near waterways.
--`style_nearby_buildings_road(x)` Styles the buildings near roads.
--`style_buffer_area_water(x)` Styles the buffer area around waterways.
--`style_buffer_area_road(x)` Styles the buffer area around roads.
+- `style_roads(x)` Styles the roads.
+- `style_waterways(x)` Styles the waterways.
+- `style_buildings(x)` Styles the buildings.
+- `style_nearby_buildings_water(x)` Styles the buildings near waterways.
+- `style_nearby_buildings_road(x)` Styles the buildings near roads.
+- `style_buffer_area_water(x)` Styles the buffer area around waterways.
+- `style_buffer_area_road(x)` Styles the buffer area around roads.
 
 ### DataDownloader
 
@@ -162,6 +166,12 @@ This class handles all the JavaScript injecting into the HTML. Every method will
         - `longitude`: Longitude of the location.
         - `api_key_openweathermap`: API key for OpenWeatherMap.
 
+- `inject_passage_simulation_script(self, map_file, point, simulation_speed=500)` Injects script for the passage simulation.
+    - ##### Parameters
+        - `map_file`: Path to the map file.
+        - `point`: tuple of longitude and latitude
+        - `simulation_speed`: Determines the speed at which random values are added to the passage points, speed in ms/addition so the higher the number the slower the simulation.
+
 ### Directory Structure
 - `shpFiles/`: Directory to store shapefiles.
 - `geoJsonFiles/`: Directory to store GeoJSON files.
@@ -172,7 +182,7 @@ This class handles all the JavaScript injecting into the HTML. Every method will
 - [Folium](https://python-visualization.github.io/folium/)
 - [OpenStreetMap](https://www.openstreetmap.org/)
 - [OpenWeatherMap](https://openweathermap.org/)
-- [SRTM](https://www2.jpl.nasa.gov/srtm/)
+- [SRTM](https://eospso.nasa.gov/missions/shuttle-radar-topography-mission)
 
 # Project Group
 - Shelly Andrien
