@@ -50,7 +50,7 @@
         }
         .loading {
             animation: spin 2s linear infinite;
-            position: absolute;
+            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -60,6 +60,8 @@
             border-top: 16px solid #a9a9a9;
             width: 120px;
             height: 120px;
+            margin-top: -60px;
+            margin-left: -60px;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
