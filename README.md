@@ -51,20 +51,81 @@ To create a detailed map, instantiate the `MapCreator` class with the wanted par
 ```python
 from mapGenerator import MapCreator
 
-# Example usage
-map_creator = MapCreator(latitude=51.1797305, longitude=5.8812762, name="Boschmolenplas", load_dist=1500, water_buffer_size=150, road_buffer_size=20)
+# Define cameras with their parameters (Boschmolenplas)
+cameras = [
+    {
+        'latitude': 51.176858,
+        'longitude': 5.882079,
+        'direction': -60,
+        'width': 94,
+        'reach': 200,
+        'name': 'camera 1 red',
+        'video_source': 'https://www.youtube.com/embed/4qOxFyZLcl0?si=VO9YbHXW7mDSENHO',
+        'cone_outline_color': 'red',
+        'cone_fill_color': 'lightred',
+        'camera_outline_color': 'blue',
+        'camera_fill_color': 'lightblue'
+    },
+    {
+        'latitude': 51.179512,
+        'longitude': 5.878201,
+        'direction': 180,
+        'width': 94,
+        'reach': 200,
+        'name': 'camera 2 blue',
+        'video_source': 'https://www.youtube.com/embed/4qOxFyZLcl0?si=VO9YbHXW7mDSENHO',
+        'cone_outline_color': 'blue',
+        'cone_fill_color': 'lightblue',
+        'camera_outline_color': 'red',
+        'camera_fill_color': 'lightred'
+    },
+    {
+        'latitude': 51.184346,
+        'longitude': 5.876827,
+        'direction': 278,
+        'width': 137,
+        'reach': 800,
+        'name': 'camera 3 green',
+        'video_source': 'https://www.youtube.com/embed/lffpBLDQqqc?si=H6um6OemAf8UQc56',
+        'cone_outline_color': 'green',
+        'cone_fill_color': 'lightgreen',
+        'camera_outline_color': 'purple',
+        'camera_fill_color': 'lightpurple'
+    }
+]
+
+# Define passage points (Boschmolenplas)
+passage_points = [
+    (51.184965, 5.884337),
+    (51.179639, 5.894701),
+    (51.175684, 5.876698),
+    (51.178336, 5.872226),
+    (51.180796, 5.883265)
+]
+
+map_creator = MapCreator(51.1797305,5.8812762,"Boschmolenplas", 1500, 150, 20, cameras, passage_points)
 map_creator.create_detailed_map()
+
 ```
-### Parameters
+#### Parameters
 - `latitude`: Latitude of the location.
 - `longitude`: Longitude of the location.
 - `name`: Name of the location.
 - `load_dist`: Distance in meters to load the infrastructure data.
 - `water_buffer_size`: Size of the buffer around waterways.
 - `road_buffer_size`: Size of the buffer around roads.
+- `cameras`: List of dictionaries with camera info
+- `passage_points`: List of tuples with coordinates
 
 ### Generated Map
 The generated map will be exported and saved as an HTML file in the `static/maps` folder with a variation of the `name map_<location_name>.html`.
+
+## Flask Application
+To run the flask application: type `flask run` as a command in the terminal in de root directory.
+OR
+To run the flask application: simply run the `app.py` file.
+
+When running use the input fields to generate a digital twin, please be mindfull of the `area` entered as this increases storage usage and increase the time it takes to generate the digital twin significantly.
 
 ## Classes
 
