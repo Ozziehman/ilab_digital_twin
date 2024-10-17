@@ -8,7 +8,7 @@ body {
 }
 
 header{
-    background-color: 	#044484;
+    
     height: 10%;
     width: 100%;
     position: fixed;
@@ -23,11 +23,10 @@ h2{
     color: #ffffff;
     size: 15px;
 }
-    #backgroundmap{
-        background-color: 	#ffffff;
-}
-    #banner{
-        background-color: 	#044484;
+
+#banner{
+        background: rgb(2,0,36);
+        background: linear-gradient(180deg, rgba(2,0,36,1) 0%, rgba(4,68,132,1) 35%, rgba(0,212,255,1) 100%);
 }
     /* #logo1{ */
         /* margin-top: 0%; */
@@ -86,7 +85,7 @@ h2{
     .button {
         background-color: rgb(0, 0, 0);
         border: none;
-        border-radius: 5px;
+        border-radius: 20px;
         cursor: pointer;
         padding: 10px 20px;
         font-size: 16px;
@@ -111,7 +110,7 @@ h2{
     <header>   
         <div id="header1">
            
-            <h1 id="titletemplatemap">Generated map:</h1></div>
+            <h1 id="titletemplatemap">Generated map: {{ map_name }}</h1></div>
 
         <div id="positionlogo">
             <a target="_blank">
