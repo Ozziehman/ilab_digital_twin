@@ -853,59 +853,59 @@ class MapCreator:
 
         return saved_map_name # return the name of the saved map within the static folder
     
-# callng the stuff
-if __name__ == "__main__":
-    # Define cameras with their parameters (Boschmolenplas)
-    cameras = [
-        {
-            'latitude': 51.176858,
-            'longitude': 5.882079,
-            'direction': -60,
-            'width': 94,
-            'reach': 200,
-            'name': 'camera 1 red',
-            'video_source': 'https://www.youtube.com/embed/4qOxFyZLcl0?si=VO9YbHXW7mDSENHO',
-            'cone_outline_color': 'red',
-            'cone_fill_color': 'lightred',
-            'camera_outline_color': 'blue',
-            'camera_fill_color': 'lightblue'
-        },
-        {
-            'latitude': 51.179512,
-            'longitude': 5.878201,
-            'direction': 180,
-            'width': 94,
-            'reach': 200,
-            'name': 'camera 2 blue',
-            'video_source': 'https://www.youtube.com/embed/4qOxFyZLcl0?si=VO9YbHXW7mDSENHO',
-            'cone_outline_color': 'blue',
-            'cone_fill_color': 'lightblue',
-            'camera_outline_color': 'red',
-            'camera_fill_color': 'lightred'
-        },
-        {
-            'latitude': 51.184346,
-            'longitude': 5.876827,
-            'direction': 278,
-            'width': 137,
-            'reach': 800,
-            'name': 'camera 3 green',
-            'video_source': 'https://www.youtube.com/embed/lffpBLDQqqc?si=H6um6OemAf8UQc56',
-            'cone_outline_color': 'green',
-            'cone_fill_color': 'lightgreen',
-            'camera_outline_color': 'purple',
-            'camera_fill_color': 'lightpurple'
-        }
-    ]
+# This is for testing it standalone without any flask app
+# if __name__ == "__main__":
+#     # Define cameras with their parameters (Boschmolenplas)
+#     cameras = [
+#         {
+#             'latitude': 51.176858,
+#             'longitude': 5.882079,
+#             'direction': -60,
+#             'width': 94,
+#             'reach': 200,
+#             'name': 'camera 1 red',
+#             'video_source': 'https://www.youtube.com/embed/4qOxFyZLcl0?si=VO9YbHXW7mDSENHO',
+#             'cone_outline_color': 'red',
+#             'cone_fill_color': 'lightred',
+#             'camera_outline_color': 'blue',
+#             'camera_fill_color': 'lightblue'
+#         },
+#         {
+#             'latitude': 51.179512,
+#             'longitude': 5.878201,
+#             'direction': 180,
+#             'width': 94,
+#             'reach': 200,
+#             'name': 'camera 2 blue',
+#             'video_source': 'https://www.youtube.com/embed/4qOxFyZLcl0?si=VO9YbHXW7mDSENHO',
+#             'cone_outline_color': 'blue',
+#             'cone_fill_color': 'lightblue',
+#             'camera_outline_color': 'red',
+#             'camera_fill_color': 'lightred'
+#         },
+#         {
+#             'latitude': 51.184346,
+#             'longitude': 5.876827,
+#             'direction': 278,
+#             'width': 137,
+#             'reach': 800,
+#             'name': 'camera 3 green',
+#             'video_source': 'https://www.youtube.com/embed/lffpBLDQqqc?si=H6um6OemAf8UQc56',
+#             'cone_outline_color': 'green',
+#             'cone_fill_color': 'lightgreen',
+#             'camera_outline_color': 'purple',
+#             'camera_fill_color': 'lightpurple'
+#         }
+#     ]
 
-    # Define passage points (Boschmolenplas)
-    passage_points = [
-        (51.184965, 5.884337),
-        (51.179639, 5.894701),
-        (51.175684, 5.876698),
-        (51.178336, 5.872226),
-        (51.180796, 5.883265)
-    ]
+#     # Define passage points (Boschmolenplas)
+#     passage_points = [
+#         (51.184965, 5.884337),
+#         (51.179639, 5.894701),
+#         (51.175684, 5.876698),
+#         (51.178336, 5.872226),
+#         (51.180796, 5.883265)
+#     ]
 
-    map_creator_1 = MapCreator(51.1797305,5.8812762,"Boschmolenplas", 1500, 150, 20, cameras, passage_points)
-    map_creator_1.create_detailed_map()
+#     map_creator_1 = MapCreator(51.1797305,5.8812762,"Boschmolenplas", 1500, 150, 20, cameras, passage_points)
+#     map_creator_1.create_detailed_map()
