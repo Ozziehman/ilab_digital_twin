@@ -169,7 +169,7 @@ This class handles all the JavaScript injecting into the HTML. Every method will
 - `inject_passage_simulation_script(self, map_file, point, simulation_speed=500)` Injects script for the passage simulation.
     - ##### Parameters
         - `map_file`: Path to the map file.
-        - `point`: tuple of longitude and latitude
+        - `point`: tuple of latitude and longitude.
         - `simulation_speed`: Determines the speed at which random values are added to the passage points, speed in ms/addition so the higher the number the slower the simulation.
 
 ### Directory Structure
