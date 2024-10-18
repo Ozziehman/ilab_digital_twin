@@ -205,7 +205,7 @@ This class handles all the JavaScript injecting into the HTML. Every method will
 - `inject_interactive_marker(self, map_file)` Injects live update JavaScript into the HTML to add a marker on the map when clicked.
     - ##### Parameters
         - `map_file`: Path to map file
-- `inject_camera_simulation_script(self, map_file, camera_latitude, camera_longitude, direction, width, reach, camera_name, video_source, cone_outline_color='red', cone_fill_color='orange', camera_outline_color='blue', camera_fill_color='lightblue')` Injects a script to show camera simulation.
+- `inject_camera_simulation_script(self, map_file, camera_latitude, camera_longitude, direction, width, reach, camera_name, video_source, cone_outline_color='red', cone_fill_color='orange', camera_outline_color='blue', camera_fill_color='lightblue')` Injects a script to show camera simulation. (This is dummy data and would be connected to an actual source of information in the future)
     - ##### Parameters
         - `map_file`: Path to the map file.
         - `camera_latitude`: Latitude of the camera.
@@ -227,7 +227,7 @@ This class handles all the JavaScript injecting into the HTML. Every method will
         - `longitude`: Longitude of the location.
         - `api_key_openweathermap`: API key for OpenWeatherMap.
 
-- `inject_passage_simulation_script(self, map_file, point, simulation_speed=500)` Injects script for the passage simulation.
+- `inject_passage_simulation_script(self, map_file, point, simulation_speed=500)` Injects script for the passage simulation. (This is dummy data and would be connected to an actual source of information in the future)
     - ##### Parameters
         - `map_file`: Path to the map file.
         - `point`: tuple of latitude and longitude.
