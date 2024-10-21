@@ -8,7 +8,6 @@ class SystemTestGenerator:
 
 systemTestGenerator = SystemTestGenerator()
 
-# locations in the netherlands
 cameras = [
         {
             'latitude': 51.176858,
@@ -48,16 +47,48 @@ cameras = [
             'cone_fill_color': 'lightgreen',
             'camera_outline_color': 'purple',
             'camera_fill_color': 'lightpurple'
+        },
+        {
+            'latitude': 51.109750,
+            'longitude': 5.819703,
+            'direction': 180,
+            'width': 120,
+            'reach': 300,
+            'name': 'camera 3 green',
+            'video_source': 'https://www.youtube.com/embed/lffpBLDQqqc?si=H6um6OemAf8UQc56',
+            'cone_outline_color': 'green',
+            'cone_fill_color': 'lightgreen',
+            'camera_outline_color': 'purple',
+            'camera_fill_color': 'lightpurple'
+        },
+        {
+            'latitude': 51.109534,
+            'longitude': 5.828372,
+            'direction': 90,
+            'width': 94,
+            'reach': 600,
+            'name': 'camera 2 blue',
+            'video_source': 'https://www.youtube.com/embed/4qOxFyZLcl0?si=VO9YbHXW7mDSENHO',
+            'cone_outline_color': 'blue',
+            'cone_fill_color': 'lightblue',
+            'camera_outline_color': 'red',
+            'camera_fill_color': 'lightred'
         }
     ]
 
-# Define passage points (Boschmolenplas)
+# Define passage points
 passage_points = [
     (51.184965, 5.884337),
     (51.179639, 5.894701),
     (51.175684, 5.876698),
     (51.178336, 5.872226),
-    (51.180796, 5.883265)
+    (51.180796, 5.883265),
+    (51.110852, 5.829212),
+    (51.111270, 5.818420),
+    (51.110960, 5.828311),
+    (51.111741, 5.818032),
+    (51.116604, 5.823438),
+    (51.115297, 5.829746)
 ]
 
 #Test 1, Rotterdam
